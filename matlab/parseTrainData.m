@@ -5,7 +5,7 @@ win = 200;
 disp('------------------------------------------')
 for subInd = 1:size(subAll.subs,1)
     sub = subAll.subs{subInd};
-    path = ['Z:\Lab Member Folders\Yuni Teh\matlab\limb position x load\completed\' subType '\' sub '\DATA\MAT'];
+    path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\completed\' subType '\' sub '\DATA\MAT'];
     names = ls(path);                   % extract list of file names in converted MAT file (if it exists)
     names(1:2,:) = [];
     names(names(:,2) ~= 'R',:) = [];    % remove testing data

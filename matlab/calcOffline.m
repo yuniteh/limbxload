@@ -31,7 +31,7 @@ sub_rate = cell(size(subAll.subs,1),2);
 
 for subInd = 1:size(subAll.subs,1)
     sub = subAll.subs{subInd};
-    path = ['Z:\Lab Member Folders\Yuni Teh\matlab\limb position x load\completed\' subType '\' sub '\DATA\MAT'];
+    path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\completed\' subType '\' sub '\DATA\MAT'];
     load(fullfile(path,'train_data.mat'))
     group = unique(params(:,1));
     
