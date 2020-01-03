@@ -11,11 +11,13 @@ for i = 1:max(data_all(:,1))
     end
 end
 
+%%
 ind1 = find(isnan(off));
 off(ind1) = [];
 on(ind1,:) = [];
 params(ind1,:)= [];
 
+%%
 for i = 1:4
-    corrcoef(off,on(:,i))
+    [r,p]=corrcoef(off,on(:,i))
 end
