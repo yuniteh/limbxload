@@ -111,7 +111,7 @@ ylim([0 1])
 ylabel('Completion Rate')
 legend(l_name)
 set(gca,'XTick',1:numPos)
-xlabel('Position')
+%test merge
 
 figure
 [ax]=tight_subplot(4,1);
