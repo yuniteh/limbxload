@@ -119,7 +119,7 @@ fig_ind = 1;
 for i = [1 9 5 2]
     axes(ax(fig_ind));
     hold all
-    errorbar_ez('box',j + (train - 1)*(nPos+1), nanmean(ave_all(:,train)),se,.4,cblue(j,:))
+    %errorbar_ez('box',j + (train - 1)*(nPos+1), nanmean(ave_all(:,train)),se,.4,cblue(j,:))
     b = bar(mean_mets{1,i},'EdgeColor','None','BarWidth',1);
     ebar(mean_mets{1,i},se_mets{1,i})
     for j = 1:2

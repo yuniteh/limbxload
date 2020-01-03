@@ -68,14 +68,14 @@ p.full.dyn = p_dyn;
 %% RUN ANOVAN PT 2
 vars = {'Complete','Time','Path','In','PMove','Distance','MaxIn','Sliding','Eff','Accuracy'};
 
-p_all = zeros(4,5);
+p_all = zeros(3,5);
 p_stat = zeros(2,5);
 p_dyn = p_stat;
 
 ind = 1;
 for i = [1 9 5 2 10]
 [p_all(:,ind), tbl, struct_all(ind)] = anovan(all.(vars{i}),{all.Pos, all.Load, all.Train, all.Sub},...
-    'varnames',{'Pos','Load','Train','Sub'},'model',[1 0 0 0; 0 1 0 0; 0 0 1 0; 1 0 1 0],'random',4,'display','off');
+    'varnames',{'Pos','Load','Train','Sub'},'model',[1 0 0 0; 0 1 0 0; 0 0 1 0],'random',4,'display','off');
 [p_stat(:,ind), tbl, struct_stat(ind)] = anovan(static.(vars{i}),{static.Pos, static.Load, static.Sub},...
     'varnames',{'Pos','Load','Sub'},'model',[1 0 0; 0 1 0],'random',3,'display','off');
 [p_dyn(:,ind), tbl, struct_dyn(ind)] = anovan(dynamic.(vars{i}),{dynamic.Pos, dynamic.Load, dynamic.Sub},...

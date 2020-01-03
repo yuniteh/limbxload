@@ -6,8 +6,10 @@ subType = 'TR';
 new = 1;
 
 %% run if there are new subs
+importData();
+
+%%
 if new == 1
-    importData();
     % import excel data
     loadSubs(subType);
     % parse all training data

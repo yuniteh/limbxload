@@ -22,7 +22,7 @@ if length(varargin) == 1
     data_dof = [];
     data_all = [];
 else
-    load(['limbxload\completed\' subType '\alldata.mat'])
+    load(['limbxload\matlab\completed\' subType '\alldata.mat'])
     new_data = zeros(size(subAll.subs,1),1);
     for i = 1:size(subAll.subs,1)
         temp = strfind(subs_all,subAll.subs{i});
@@ -39,7 +39,7 @@ for subInd = 1:size(subAll.subs,1)
         order = [subAll.loadOrder(subInd,1:numLoads); subAll.loadOrder(subInd,numLoads + 1:end)];
         testOrder = subAll.testOrder(subInd,:);
         
-        path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\completed\' subType '\' sub '\DATA\MAT'];
+        path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
         names = ls(path);                   % extract list of file names in converted MAT file (if it exists)
         names(1:2,:) = [];
         names(names(:,2) == 'R',:) = [];    % remove training data
