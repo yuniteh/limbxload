@@ -8,15 +8,15 @@ p.nPos = max(data_all(:,4));
 p.nTests = max(data_all(:,3));
 p.nLoads = max(data_all(:,2));
 p.nSubs = max(data_all(:,1));
-p.leg = {'static', 'dynamic'};
+p.l_name = {'static', 'dynamic'};
 if p.nLoads == 3
-    p.load = [0 400 600];
+    p.loadLabel = [0 400 600];
 else
-    p.load = [0 400 500 600];
+    p.loadLabel = [0 400 500 600];
 end
 
-p.metLabels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Efficacy (%)'},{'Completion Time (s)'},{'Offline Accuracy (%)'}];
-p.loadLabels = [{'0g'},{'400g'},{'600g'}];
+p.labels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Efficacy (%)'},{'Completion Time (s)'},{'Offline Accuracy (%)'}];
+load_lab = [{'0g'},{'400g'},{'600g'}];
 
 %% Scale metrics
 if max(data_all(:,6) <= 1)
@@ -26,10 +26,8 @@ if max(data_all(:,6) <= 1)
     data_all(:,15) = data_all(:,15).*100;
 end
 
-%% Switch between plot styles
 switch style
     case 'oldest'
         plotV1(data_all,cm_all,acc_all,group,p)
-end
 end
 
