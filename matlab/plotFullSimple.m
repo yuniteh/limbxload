@@ -24,7 +24,9 @@ for met = [6 14 10 7 15]
                 for sub = 1:p.nSubs
                     ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub & data_all(:,2) == load;
                     ave = nanmean(data_all(ind,met));
-                    plot(j + (train - 1)*(p.nPos+1),ave,'.','Color',cblue(j,:),'MarkerSize',8)
+                    if strcmp(subType,'TR')
+                        plot(j + (train - 1)*(p.nPos+1),ave,'.','Color',cblue(j,:),'MarkerSize',8)
+                    end
                     ave_all(sub,train) = ave;
                 end
                 se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
@@ -64,7 +66,7 @@ for met = [6 14 10 7 15]
 end
 
 %% Plot while blocking load (AB summary)
-if strcomp(subType,'AB')
+if strcmp(subType,'AB')
     figure
     [ax]=tight_subplot(1,5,[.05 .05],[.12 .03],[.05 0]);
     
