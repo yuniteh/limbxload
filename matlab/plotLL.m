@@ -1,4 +1,4 @@
-function plotLL(data_all,data_dof,cm_all,acc_all,group,style)
+function plotLL(data_all,data_dof,cm_all,acc_all,group,subType,style)
 %% All data format
 % 1: subject id
 % 2: load
@@ -55,6 +55,9 @@ switch style
     % simple summary box and bar plots, used for TNSRE first submission
     case 'tnsre'
         plotSimple(data_all,p)
+    % new full box and whisker and summary plots, TNSRE resubmission
+    case 'tnsreV2'
+        plotFullSimple(data_all,p,subType)
 end
 end
 
