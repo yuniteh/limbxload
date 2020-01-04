@@ -24,7 +24,7 @@ data_all = combineData(data_all,sub_rate);
 uisave({'data_all','subs_all','cm_all','acc_all'},'alldata')
 
 %% create all figures
-plotAll(data_all,cm_all,acc_all,2,'tnsre')
+plotLL(data_all,data_dof,cm_all,acc_all,2,'tnsre')
 
 %% run statistical analysis
 [p, struct] = stats(data_all);
