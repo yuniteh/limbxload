@@ -65,7 +65,7 @@ for met = [6 14 10 7 15]
             end
             se = nanstd(ave_all(:,train))/sqrt(nSubs);
             errorbar_ez('box',train + (j-1)*(3), nanmean(ave_all(:,train)),se,.4,c(train,:))
-            %errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
+ errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
 
             xticks(j) = ((1+ (j-1)*(3)) + (2 + (j-1)*(3)))/2;
         end
@@ -95,6 +95,7 @@ end
 % [ax]=tight_subplot(1,5,[.05 .05],[.2 .03],[.05 0]);
 % c = [cblue(2,:); cred(2,:)];
 
+%%
 xticks = zeros(3,1);
 fig_ind = 2;
 y_ind = 1;
@@ -110,8 +111,8 @@ for met = [6 14 10 7 15]
                 ave_all(sub,train) = ave;
             end
             se = nanstd(ave_all(:,train))/sqrt(nSubs);
-            errorbar_ez('box',train + (j-1)*(3), nanmean(ave_all(:,train)),se,.4,c(train,:))
-            %errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
+            %errorbar_ez('box',train + (j-1)*(3), nanmean(ave_all(:,train)),se,.4,c(train,:))
+            errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
             
             xticks(j) = ((1+ (j-1)*(3)) + (2 + (j-1)*(3)))/2;
         end
@@ -135,7 +136,7 @@ for met = [6 14 10 7 15]
     y_ind = y_ind + 1;
     set(gca,'linewidth',1)
 end
-%% position - TNSRE plots
+%% position - blue red bars
 figure
 [ax]=tight_subplot(5,2,[.04 .06],[.06 .03],[.1 0.01]);
 %[ax]=tight_subplot(4,2,[.1 .06],[.05 .03],[.05 0.01]);
