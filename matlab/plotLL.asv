@@ -1,4 +1,20 @@
 function plotLL(data_all,cm_all,acc_all,group,style)
+%% All data format
+% 1: subject id
+% 2: load
+% 3: training set
+% 4: arm position
+% 5: target DOF
+% 6: completion flag
+% 7: trial time
+% 8: path efficiency
+% 9: samples in target
+% 10: percent movement in target
+% 11: distance
+% 12: maximum time in target
+% 13: sliding window maximum time in target
+% 14: movement efficacy
+
 disp('Plotting data...')
 % data_all: all results from compileSubs fxn
 % group: 0 = failed trials only, 1 = completed trials only, 2 = all trials
@@ -8,15 +24,16 @@ p.nPos = max(data_all(:,4));
 p.nTests = max(data_all(:,3));
 p.nLoads = max(data_all(:,2));
 p.nSubs = max(data_all(:,1));
-p.l_name = {'static', 'dynamic'};
+p.leg = {'static', 'dynamic'};
 if p.nLoads == 3
-    p.loadLabel = [0 400 600];
+    p.load = [0 400 600];
 else
-    p.loadLabel = [0 400 500 600];
+    p.load = [0 400 500 600];
 end
+p.nDOF = max(data_all(:,5));
 
-p.labels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Efficacy (%)'},{'Completion Time (s)'},{'Offline Accuracy (%)'}];
-load_lab = [{'0g'},{'400g'},{'600g'}];
+p.metLabels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Efficacy (%)'},{'Completion Time (s)'},{'Offline Accuracy (%)'}];
+p.loadLabels = [{'0g'},{'400g'},{'600g'}];
 
 %% Scale metrics
 if max(data_all(:,6) <= 1)
@@ -26,8 +43,12 @@ if max(data_all(:,6) <= 1)
     data_all(:,15) = data_all(:,15).*100;
 end
 
+%% Switch between plot styles
 switch style
     case 'oldest'
         plotV1(data_all,cm_all,acc_all,group,p)
+    case 'subs'
+        plot*
+end
 end
 
