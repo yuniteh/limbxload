@@ -51,7 +51,10 @@ switch style
     % most comprehensive plots from first draft of TNSRE paper - plots all
     % conditions, summary plots, wrong DOF activations
     case 'full'
-        plotFull(data_all,data_dof,cm_all,acc_all,group,p)
+        plotFull(data_all,data_dof,p)
+    % simple summary box and bar plots, used for TNSRE first submission
+    case 'tnsre'
+        plotSimple(data_all,p)
 end
 end
 

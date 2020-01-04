@@ -1,46 +1,12 @@
-%% All data format
-% 1: subject id
-% 2: load
-% 3: training set
-% 4: arm position
-% 5: target DOF
-% 6: completion flag
-% 7: trial time
-% 8: path efficiency
-% 9: samples in target
-% 10: percent movement in target
-% 11: distance
-% 12: maximum time in target
-% 13: sliding window maximum time in target
-% 14: movement efficacy
-
-%%
-data_all(:,6) = data_all(:,6).*100;
-data_all(:,10) = data_all(:,10).*100;
-data_all(:,14) = data_all(:,14).*100;
-data_all(:,15) = data_all(:,15).*100;
-
-%%
-met = 15;
-
+function plotSimple(data_all,p)
+%% set colormaps
 cblue = linspecer(5,'blue');
 cblue = flipud(cblue);
 cred = linspecer(10,'red');
 cred = flipud(cred);
 cgreen = linspecer(5,'green');
 cgreen = flipud(cgreen);
-
 close all
-nSubs = max(data_all(:,1));
-nPos = max(data_all(:,4));
-nLoad = max(data_all(:,2));
-nDOF = 6;
-
-marg = 0.3;
-
-
-labels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Efficacy (%)'},{'Completion Time (s)'},{'Offline Accuracy (%)'}];
-load_lab = [{'0g'},{'400g'},{'600g'}];
 
 %% position - blue red
 figure
@@ -55,18 +21,18 @@ for met = [6 14 10 7 15]
     axes(ax(fig_ind));
     hold all
     for train = 1:2
-        for j = 1:nPos
-            ave_all = zeros(nSubs,2);
-            for sub = 1:nSubs
+        for j = 1:p.nPos
+            ave_all = zeros(p.nSubs,2);
+            for sub = 1:p.nSubs
                 ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub;
                 ave = nanmean(data_all(ind,met));
                 %plot(train + (j-1)*(2+1),ave,'.','Color','k','MarkerSize',8)
                 ave_all(sub,train) = ave;
             end
-            se = nanstd(ave_all(:,train))/sqrt(nSubs);
+            se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
             errorbar_ez('box',train + (j-1)*(3), nanmean(ave_all(:,train)),se,.4,c(train,:))
             %errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
-
+            
             xticks(j) = ((1+ (j-1)*(3)) + (2 + (j-1)*(3)))/2;
         end
     end
@@ -84,7 +50,7 @@ for met = [6 14 10 7 15]
         xlabel('Limb Position')
     end
     xlim([.4 train + (j-1)*(2+1)+.6])
-    ylabel(labels{y_ind})
+    ylabel(p.metLabels{y_ind})
     y_ind = y_ind + 1;
     fig_ind = fig_ind + 2;
     set(gca,'linewidth',1)
@@ -102,14 +68,14 @@ for met = [6 14 10 7 15]
     axes(ax(fig_ind));
     hold all
     for train = 1:2
-        for j = 1:nLoad
-            ave_all = zeros(nSubs,2);
-            for sub = 1:nSubs
+        for j = 1:p.nLoads
+            ave_all = zeros(p.nSubs,2);
+            for sub = 1:p.nSubs
                 ind = data_all(:,3) == train & data_all(:,2) == j & data_all(:,1) == sub;
                 ave = nanmean(data_all(ind,met));
                 ave_all(sub,train) = ave;
             end
-            se = nanstd(ave_all(:,train))/sqrt(nSubs);
+            se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
             errorbar_ez('box',train + (j-1)*(3), nanmean(ave_all(:,train)),se,.4,c(train,:))
             %errorbar_ez('boxwhisk',train + (j-1)*(3), ave_all(:,train),se,.4,c(train,:))
             
@@ -130,7 +96,7 @@ for met = [6 14 10 7 15]
         xlabel('Load')
     end
     xlim([.4 train + (j-1)*(2+1)+.6])
-    %ylabel(labels{y_ind})
+    %ylabel(p.metLabels{y_ind})
     fig_ind = fig_ind + 2;
     y_ind = y_ind + 1;
     set(gca,'linewidth',1)
@@ -142,23 +108,23 @@ figure
 c = [cblue(2,:); cgreen(4,:)];
 
 xticks = zeros(3,1);
-se = zeros(nLoad,2);
-aves = zeros(nLoad,2);
+se = zeros(p.nLoads,2);
+aves = zeros(p.nLoads,2);
 fig_ind = 1;
 y_ind = 1;
 for met = [6 14 10 7 15]
     axes(ax(fig_ind));
     hold all
-    for j = 1:nPos
+    for j = 1:p.nPos
         for train = 1:2
             
-            ave_all = zeros(nSubs,2);
-            for sub = 1:nSubs
+            ave_all = zeros(p.nSubs,2);
+            for sub = 1:p.nSubs
                 ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub;
                 ave = nanmean(data_all(ind,met));
                 ave_all(sub,train) = ave;
             end
-            se(j,train) = nanstd(ave_all(:,train))/sqrt(nSubs);
+            se(j,train) = nanstd(ave_all(:,train))/sqrt(p.nSubs);
             aves(j,train) = nanmean(ave_all(:,train));
         end
     end
@@ -172,15 +138,15 @@ for met = [6 14 10 7 15]
     else
         ylim([0 20])
     end
-    set(gca,'XTick',1:nPos)
+    set(gca,'XTick',1:p.nPos)
     if y_ind == 5
         set(gca,'XTickLabels',['P1'; 'P2';'P3';'P4'])
         xlabel('Limb Position')
     else
         set(gca,'XTickLabels',[])
     end
-    xlim([0.5 nPos+.5])
-    ylabel(labels{y_ind})
+    xlim([0.5 p.nPos+.5])
+    ylabel(p.metLabels{y_ind})
     fig_ind = fig_ind + 2;
     y_ind = y_ind + 1;
     set(gca,'linewidth',1)
@@ -191,23 +157,23 @@ end
 %c = [cblue(2,:);cred(2,:)];
 
 xticks = zeros(3,1);
-se = zeros(nLoad,2);
-aves = zeros(nLoad,2);
+se = zeros(p.nLoads,2);
+aves = zeros(p.nLoads,2);
 fig_ind = 2;
 for met = [6 14 10 7 15]
     axes(ax(fig_ind));
     hold all
-    for j = 1:nLoad
+    for j = 1:p.nLoads
         for train = 1:2
             
-            ave_all = zeros(nSubs,2);
-            for sub = 1:nSubs
+            ave_all = zeros(p.nSubs,2);
+            for sub = 1:p.nSubs
                 ind = data_all(:,3) == train & data_all(:,2) == j & data_all(:,1) == sub;
                 ave = nanmean(data_all(ind,met));
-                %plot(j + (train - 1)*(nPos+1),ave,'.','Color',cblue(j,:),'MarkerSize',8)
+                %plot(j + (train - 1)*(p.nPos+1),ave,'.','Color',cblue(j,:),'MarkerSize',8)
                 ave_all(sub,train) = ave;
             end
-            se(j,train) = nanstd(ave_all(:,train))/sqrt(nSubs);
+            se(j,train) = nanstd(ave_all(:,train))/sqrt(p.nSubs);
             aves(j,train) = nanmean(ave_all(:,train));
         end
     end
@@ -221,15 +187,15 @@ for met = [6 14 10 7 15]
     else
         ylim([0 20])
     end
-    set(gca,'XTick',1:nLoad)
+    set(gca,'XTick',1:p.nLoads)
     if fig_ind == 10
         set(gca,'XTickLabels',[{'0g'};{'400g'};{'600g'}])
         xlabel('Load')
     else
         set(gca,'XTickLabels',[]);
     end
-    xlim([0.5 nLoad+.5])
-    %ylabel(labels{fig_ind-4})
+    xlim([0.5 p.nLoads+.5])
+    %ylabel(p.metLabels{fig_ind-4})
     fig_ind = fig_ind + 2;
     set(gca,'linewidth',1)
     %         % get handle to current axes
@@ -241,4 +207,5 @@ for met = [6 14 10 7 15]
     %     % set original axes as active
     %     axes(a)
     %legend('Static','Dynamic')
+end
 end

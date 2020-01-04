@@ -1,4 +1,4 @@
-function plotFull(data_all,data_dof,cm_all,acc_all,group,p)
+function plotFull(data_all,data_dof,p)
 %% set colormaps
 cblue = linspecer(5,'blue');
 cblue = flipud(cblue);
