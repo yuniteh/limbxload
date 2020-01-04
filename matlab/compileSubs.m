@@ -72,6 +72,8 @@ for subInd = 1:size(subAll.subs,1)
         end
     end
 end
+data_all_new(start:end,:) = [];
+data_dof_new(start:end,:) = [];
 data_all = [data_all; data_all_new];
 data_dof = [data_dof; data_dof_new];
 subs_all = subAll.subs;

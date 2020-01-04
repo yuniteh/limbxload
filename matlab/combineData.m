@@ -21,8 +21,10 @@ for i = 1:size(sub_rate,1) % sub
     for j = 1:size(sub_rate,2) % training set
         for k = 1:size(sub_rate{1,1},2) % load
             for h = 1:size(sub_rate{1,1},1) % pos
-                ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h;
-                dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j}(h,k)));
+                if ~isempty(sub_rate{i,j})
+                    ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h;
+                    dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j}(h,k)));
+                end
             end
         end
     end
