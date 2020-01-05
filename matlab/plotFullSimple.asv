@@ -6,75 +6,66 @@ cred = linspecer(7,'red');
 cred = flipud(cred);
 cgreen = linspecer(4,'green');
 cgreen = flipud(cgreen);
-%close all
+close all
 
 %% Plot static data with points
-%marks = [{'o'},{'+'},{'*'},{'d'},{'s'},{'^'},{'p'}];
+marks = [{'o'},{'+'},{'*'},{'d'},{'s'},{'^'},{'p'}];
 xvals = ones(p.nSubs,1);
-normval = ones(p.nSubs,1);
 for train = 1:2
     figure
-    [ax]=tight_subplot(2,4,[.03 .04],[.03 .03],[.09 0]);
+    [ax]=tight_subplot(1,4,[.03 .04],[.03 .03],[.09 0]);
     
     fig_ind = 1;
     y_ind = 1;
-    for figtype = 1:2
-        for met = [6 14 10 7]
-            for load = 1
-                axes(ax(fig_ind));
-                hold all
-                minx = 0;
-                maxx = ((2*p.nPos)-1)+1;
-                xlim([minx maxx])
-                plot([minx maxx],[0 0],'k-','LineWidth',1)
-                for j = 1:p.nPos
-                    ave_all = zeros(p.nSubs,2);
-                    for sub = 1:p.nSubs
-                        ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub & data_all(:,2) == load;
-                        ave = nanmean(data_all(ind,met));
-                        if strcmp(subType,'TR')
-                            %plot(((2*j)-1)+.15*(sub-4),ave,marks{sub},'Color','k','MarkerSize',8,'MarkerFaceColor',cblue(j+1,:))
-                        end
-                        ave_all(sub,train) = ave;
-                        if j == 1
-                            normval(sub) = ave;
-                        end
+    for met = [6 14 10 7]
+        for load = 1
+            axes(ax(fig_ind));
+            hold all
+            for j = 1:p.nPos
+                ave_all = zeros(p.nSubs,2);
+                for sub = 1:p.nSubs
+                    ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub & data_all(:,2) == load;
+                    ave = nanmean(data_all(ind,met));
+                    if strcmp(subType,'TR')
+                        %plot(((2*j)-1)+.15*(sub-4),ave,marks{sub},'Color','k','MarkerSize',8,'MarkerFaceColor',cblue(j+1,:))
                     end
-                    xv = xvals.*((2*j)-1);
+                    ave_all(sub,train) = ave;
+                    if j == 1
                     
-                    se = nanstd(ave_all(:,train)-normval)/sqrt(p.nSubs);
-                    for sub = 1:p.nSubs
-                        %plot((2*j)-1,ave_all(sub,train)-normval(sub),'o','Color','k','MarkerSize',8,'MarkerFaceColor',cblue(j+1,:))
-                    end
-                    if j > 1
-                        errorbar_ez('boxwhisk',(2*j)-1, ave_all(:,train)-normval,se,.4,cblue(j,:))
                     end
                 end
+                xv = xvals.*((2*j)-1);
                 
-                
-                if met ~= 7
-                    ylim([-100 100])
-                else
-                    ylim([-20 20])
-                end
-                
-                set(gca,'XTick',[])
-                if load > 1
-                    set(gca,'YTick',[])
-                else
-                    ylabel(p.metLabels{y_ind})
-                end
-                if met == 6
-                    title(p.loadLabels{load},'FontWeight','Normal')
-                elseif met == 15
-                    set(gca,'XTick',[1:2:p.nPos])
-                end
-                set(gca,'linewidth',1)
-                fig_ind = fig_ind + 1;
+                se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
+                errorbar_ez('boxwhisk',(2*j)-1, ave_all(:,train),se,.4,cblue(j,:))
             end
+            minx = 0;
+            maxx = ((2*p.nPos)-1)+1;
+            midx = (minx + maxx)/2;
+            xlim([minx maxx])
             
-            y_ind = y_ind + 1;
+            if met ~= 7
+                ylim([0 100])
+            else
+                ylim([0 20])
+            end
+
+            set(gca,'XTick',[])
+            if load > 1
+                set(gca,'YTick',[])
+            else
+                ylabel(p.metLabels{y_ind})
+            end
+            if met == 6
+                title(p.loadLabels{load},'FontWeight','Normal')
+            elseif met == 15
+                set(gca,'XTick',[1:2:p.nPos])
+            end
+            set(gca,'linewidth',1)
+            fig_ind = fig_ind + 1;
         end
+        
+        y_ind = y_ind + 1;
     end
 end
 
