@@ -19,6 +19,10 @@ all.Load = nominal(all.Load);
 
 static.Pos = categorical(static.Pos,[1,2,3,4]);
 static.Sub = categorical(static.Sub);
+%static.Load = static.Load - 1;
+%static.Load(static.Load == 1) = 0;
+%static.Load(static.Load == 2) = 400;
+%static.Load(static.Load == 3) = 500;
 static.Load = categorical(static.Load,[1,2,3]);
 %static.Load = static.Load - 1;
 %static.SubType = categorical(static.SubType,[1,2]);
@@ -31,5 +35,5 @@ stat_nl.Pos = nominal(stat_nl.Pos);
 stat_nl.Sub = nominal(stat_nl.Pos);
 
 %%
-mod = fitlme(static,'Eff~Pos+Load+Pos*Load+(1|Sub)')
+mod = fitlme(static,'Eff~Pos+Load+Pos*Load+(1|Sub)')%,'dummyvarcoding','effects')
 anova(mod)

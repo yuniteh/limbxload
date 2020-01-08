@@ -58,6 +58,9 @@ switch style
     % new full box and whisker and summary plots, TNSRE resubmission
     case 'tnsreV2'
         plotFullSimple(data_all,p,subType)
+    % offline plots for Biorob
+    case 'biorob'
+        plotBiorob(data_all,data_dof,p)
 end
 end
 
