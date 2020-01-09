@@ -35,5 +35,5 @@ stat_nl.Pos = nominal(stat_nl.Pos);
 stat_nl.Sub = nominal(stat_nl.Pos);
 
 %%
-mod = fitlme(static,'Eff~Pos+Load+Pos*Load+(1|Sub)')%,'dummyvarcoding','effects')
+mod = fitlme(static,'Accuracy~Pos+Load+Pos*Load+(1|Sub)')%,'dummyvarcoding','effects')
 anova(mod)
