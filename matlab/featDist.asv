@@ -18,5 +18,7 @@ for subInd = 1:size(subAll.subs,1)
                 end
             end
         end
+        
+        d.
     end
 end
