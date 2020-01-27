@@ -19,7 +19,7 @@ end
 %% calculate metrics and compile subs
 [data_all, data_dof, subs_all] = compileSubs(subType,1); %1 for recompile
 %%
-[cm_all, acc_all, sub_rate] = calcOffline(subType);
+[cm_all, acc_all, sub_rate] = calcOffline(subType,1);
 data_all = combineData(data_all,sub_rate);
 uisave({'data_all','data_dof','subs_all','cm_all','acc_all'},'alldata')
 

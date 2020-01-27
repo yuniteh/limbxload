@@ -1,4 +1,6 @@
 function [cm_all, acc_all, sub_rate] = calcOffline(subType)
+% cval = 0, no cross validation, use full static training data
+% cval = 1, cross validation using same day static training data
 subAll = loadSubs(subType,1);
 win = 200;
 fold = 10;
