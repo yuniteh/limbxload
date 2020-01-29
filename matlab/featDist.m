@@ -30,14 +30,14 @@ for subInd = 1:size(subAll.subs,1)
                         
                         % SI calculation
                         for c = 1:max(params(:,2))
-                            if c ~= cl
-                                SI_feat = feat(params(:,1) == load+2 & params(:,2) == c & params(:,3) == pos,:);
-                                SI_temp = 0.5*sqrt(mahal(mean(SI_feat),test_feat));
+                            %if c ~= cl
+                                SI_feat = feat(params(:,1) == 3 & params(:,2) == c & params(:,3) == pos,:);
+                                SI_temp = 0.5*sqrt(mahal(mean(test_feat),SI_feat));
                                 if SI_temp < SI(load,pos,cl) || isnan(SI(load,pos,cl))
                                     SI(load,pos,cl) = SI_temp;
                                     SI_class(load,pos,cl) = c;
                                 end
-                            end
+                           %end
                         end
                     end
                 end
