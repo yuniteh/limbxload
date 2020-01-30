@@ -5,9 +5,9 @@ subAll = loadSubs(subType,1);
 win = 200;
 fold = 10;
 if strcmp(subType,'AB')
-    numLoads = 4;
-    numPos = 5;
-    loads = [0 400 500 600];
+    numLoads = 3;
+    numPos = 4;
+    loads = [0 400 600];
 else
     numLoads = 3;
     numPos = 4;
@@ -36,6 +36,15 @@ for subInd = 1:size(subAll.subs,1)
     path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
+        if strcmp(subType,'AB')         % remove position 5 and load = 500g
+            ind = params(:,1) == 5;
+            params(ind,:) = [];
+            params(params(:,1) == 6,1) = 5;
+            feat(ind,:) = [];
+            ind = params(:,3) == 5;
+            params(ind,:) = [];
+            feat(ind,:) = [];
+        end
         group = unique(params(:,1));
         
         % create training and testing indices for feedforward static
@@ -74,9 +83,9 @@ for subInd = 1:size(subAll.subs,1)
                 cm = confusionmat(class_true,class_out);
                 sub_rate{subInd,i} = NaN(numPos,numLoads);
             else
-                for ii = 1:2
-                    if ii == 1
-                        if skip ~= 1
+                for ii = 1:2 % 1 = static, 2 = dynamic
+                    if ii == 1  % use cross validation for static training
+                        if skip ~= 1    % skip if data was corrupted
                             k_max = fold;
                             stat_ind = params(:,1) == 3 & params(:,3) == 1;
                             cur_feat = feat(stat_ind,:);
@@ -143,7 +152,7 @@ for subInd = 1:size(subAll.subs,1)
                 end
             end
             cm_all{i} = cm_temp;
-        end
+        end  
     end
 end
 for i = 1:2
