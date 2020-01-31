@@ -34,7 +34,7 @@ for met = [15]
             end
         end
         assignin('base','vplot',vplot);
-        vs = violinplot(vplot,1:j,'ShowData',true,'ShowViolin',false,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
+        vs = violinplot(vplot,1:j,'ShowData',true,'ShowViolin',true,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
         %assignin('base','vs',vs);
         ylim([0 100])
         minx = .4;

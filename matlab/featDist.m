@@ -20,6 +20,8 @@ for subInd = 1:size(subAll.subs,1)
                 for cl = 1:max(params(:,2))
                     test_feat = feat(params(:,1) == load+2 & params(:,2) == cl & params(:,3) == pos,:);
                     stat_feat = feat(params(:,1) == 3 & params(:,2) == cl & params(:,3) == 1,:);
+                    load_feat = feat(params(:,1) == 3 & params(:,2) == cl & params(:,3) == pos,:);
+                    pos_feat = feat(params(:,1) == load+2 & params(:,2) == cl & params(:,3) == 1,:);
                     if ~isempty(stat_feat) && ~isempty(test_feat)
                         test_cen = mean(test_feat);         % testing data centroid
                         test_ax = 2.*std(test_feat);        % testing data semi-principal axis
