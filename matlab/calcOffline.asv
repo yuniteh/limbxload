@@ -37,13 +37,13 @@ for subInd = 1:size(subAll.subs,1)
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
         if strcmp(subType,'AB')         % remove position 5 and load = 500g
-            ind = params(:,1) == 5;
-            params(ind,:) = [];
+            cut_ind = params(:,1) == 5;
+            params(cut_ind,:) = [];
             params(params(:,1) == 6,1) = 5;
-            feat(ind,:) = [];
-            ind = params(:,3) == 5;
-            params(ind,:) = [];
-            feat(ind,:) = [];
+            feat(cut_ind,:) = [];
+            cut_ind = params(:,3) == 5;
+            params(cut_ind,:) = [];
+            feat(cut_ind,:) = [];
         end
         group = unique(params(:,1));
         
@@ -56,78 +56,81 @@ for subInd = 1:size(subAll.subs,1)
         end
         
         % create training and testing indices for feedforward dynamic
-        nsamps = (size(train_stat,2)+size(test_stat,2))/max(params(:,2));
+        nsamps = (size(train_stat,2)+size(test_stat,2))/max(params(:,2));           % number of samples from feedforward static
         for i = 1:max(params(:,2))
-            temp_ind = find(params(:,1) == 2 & params(:,2) == i);
-            temp_perm = temp_ind(randperm(length(temp_ind),length(temp_ind)));
-            temp_class(:,i) = temp_perm(1:nsamps);
+            temp_ind = find(params(:,1) == 2 & params(:,2) == i);                   % index for dynamic training in current DOF
+            temp_perm = temp_ind(randperm(length(temp_ind),length(temp_ind)));      % shuffle dynamic training data
+            temp_class(:,i) = temp_perm(1:nsamps);                                  % grab indices for same number of samples as feedforward static
         end
         class_ind = reshape(temp_class,[],1);
-        [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);
+        [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         clear temp_class
-        for i = group'                   % loop through static, dynamic, feedforward
-            ind = params(:,1) == i;
-            if i < 3                        % accuracy within static and dynamic training sets
+        for te_type = group'                      % loop through static, dynamic, feedforward
+            ind = params(:,1) == te_type;         % index for current testing data group
+            if te_type < 3                        % accuracy within static and dynamic training sets, not v important
                 feat_temp = feat(ind,:);
                 true_temp = params(ind,:);
                 [train_ind, test_ind] = crossval(params(ind,2),fold);
                 class_out = zeros(fold, size(test_ind,2));
                 class_true = class_out;
-                for j = 1:fold
-                    [w,c] = trainLDA(feat_temp(train_ind(j,:),:), true_temp(train_ind(j,:),2));
-                    [class_out(j,:)] = classifyLDA(feat_temp(test_ind(j,:),:),w,c);
-                    class_true(j,:) = true_temp(test_ind(j,:),2);
+                for i_fold = 1:fold
+                    [w,c] = trainLDA(feat_temp(train_ind(i_fold,:),:), true_temp(train_ind(i_fold,:),2));
+                    [class_out(i_fold,:)] = classifyLDA(feat_temp(test_ind(i_fold,:),:),w,c);
+                    class_true(i_fold,:) = true_temp(test_ind(i_fold,:),2);
                 end
                 class_true = reshape(class_true,1,[]);
                 class_out = reshape(class_out,1,[]);
                 cm = confusionmat(class_true,class_out);
-                sub_rate{subInd,i} = NaN(numPos,numLoads);
-            else                            % accuracy for feedforward data
-                for ii = 1:2                % 1 = static, 2 = dynamic
-                    if ii == 1              % use cross validation for static training
-                        if skip ~= 1        % skip if data was corrupted
+                sub_rate{subInd,te_type} = NaN(numPos,numLoads);
+            
+            % ACCURACY FOR FEEDFORWARD DATA
+            else                                
+                for tr_type = 1:2               % 1 = static, 2 = dynamic
+                    % TRAINING USING STATIC FEEDFORWARD DATA
+                    if tr_type == 1              
+                        if skip ~= 1            % skip if data was corrupted
                             k_max = fold;
                             stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
-                            cur_feat = feat(stat_ind,:);
-                            cur_params = params(stat_ind,:);
-                            if i == 3
-                                sup_ind = ind & params(:,3) ~= 1;
-                                class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);
-                                class_true = class_out;
-                                pos = class_out;
-                                for j = 1:fold
-                                    test_feat = [cur_feat(test_stat(j,:),:); feat(sup_ind,:)];
-                                    train_feat = cur_feat(train_stat(j,:),:);
-                                    train_class = cur_params(train_stat(j,:),2);
-                                    pos(:,j) = [cur_params(test_stat(j,:),3); params(sup_ind,3)];
+                            cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
+                            cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
+                            % IF CLASSIFYING NO LOAD FEEDFORWARD CONDITION
+                            if te_type == 3                                                           
+                                sup_ind = ind & params(:,3) ~= 1;               % index for no load, all positions except pos 1
+                                class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);           % initialize testing data classifier output
+                                class_true = class_out;                                             % initialize testing data ground truth
+                                pos = class_out;                                                    % initialize testing data position matrix
+                                for i_fold = 1:fold
+                                    train_feat = cur_feat(train_stat(i_fold,:),:);
+                                    train_params = cur_params(train_stat(i_fold,:),2);
+                                    test_feat = [cur_feat(test_stat(i_fold,:),:); feat(sup_ind,:)];
+                                    pos(:,i_fold) = [cur_params(test_stat(i_fold,:),3); params(sup_ind,3)];
+                                    class_true(:,i_fold) = [cur_params(test_stat(i_fold,:),2); params(sup_ind,2)];
+                                    
                                     [w,c] = trainLDA(train_feat, train_class);
-                                    [class_out(:,j)] = classifyLDA(test_feat,w,c);
-                                    class_true(:,j) = [cur_params(test_stat(j,:),2); params(sup_ind,2)];
-                                    tr_data{1,j} = train_feat;
-                                    tr_data{2,j} = train_class;
-                                    te_data{1,j} = test_feat;
-                                    te_data{2,j} = class_true(:,j);
+                                    [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
                                 end
-                            else
+                            % IF CLASSIFYING OTHER FEEDFORWARD CONDITIONS
+                            else            
                                 class_out = zeros(sum(ind),fold);
                                 class_true = class_out;
                                 pos = class_out;
-                                for j = 1:fold
-                                    [w,c] = trainLDA(cur_feat(train_stat(j,:),:), cur_params(train_stat(j,:),2));
-                                    [class_out(:,j)] = classifyLDA(feat(ind,:),w,c);
-                                    class_true(:,j) = params(ind,2);
-                                    pos(:,j) = params(ind,3);
+                                for i_fold = 1:fold
+                                    [w,c] = trainLDA(cur_feat(train_stat(i_fold,:),:), cur_params(train_stat(i_fold,:),2));
+                                    [class_out(:,i_fold)] = classifyLDA(feat(ind,:),w,c);
+                                    class_true(:,i_fold) = params(ind,2);
+                                    pos(:,i_fold) = params(ind,3);
                                 end
                             end
                         end
-                    else
+                    % TRAINING USING DYNAMIC DATA
+                    else                    
                         k_max = fold;
-                        for j = 1:fold
+                        for i_fold = 1:fold
                             train_feat = feat(class_ind(train_dyn),:);
                             [w,c] = trainLDA(train_feat,params(class_ind(train_dyn),2));
-                            [class_out(:,j)] = classifyLDA(feat(ind,:),w,c);
-                            class_true(:,j) = params(ind,2);
-                            pos(:,j) = params(ind,3);
+                            [class_out(:,i_fold)] = classifyLDA(feat(ind,:),w,c);
+                            class_true(:,i_fold) = params(ind,2);
+                            pos(:,i_fold) = params(ind,3);
                         end
                         %                     k_max = 1;
                         %                     train_ind = params(:,1) == ii;
@@ -136,27 +139,29 @@ for subInd = 1:size(subAll.subs,1)
                         %                     class_true = params(ind,2);
                         %                     class_out = classifyLDA(feat(ind,:),w,c);
                     end
+                    
+                    % COMBINING RESULTS ACROSS SUBJECTS
                     if skip ~= 1
                         for j = 1:max(params(:,3))
                             for k = 1:k_max
                                 pos_ind = pos(:,k) == j;
                                 count = sum(class_out(pos_ind,k) == class_true(pos_ind,k));
-                                acc_all{ii,1}(i - 2,j) = acc_all{ii,1}(i-2,j) + count;
-                                acc_all{ii,2}(i - 2,j) = acc_all{ii,2}(i-2,j) + sum(pos_ind);
-                                sub_rate{subInd,ii}(j,i - 2) = count/sum(pos_ind);
+                                acc_all{tr_type,1}(te_type - 2,j) = acc_all{tr_type,1}(te_type-2,j) + count;
+                                acc_all{tr_type,2}(te_type - 2,j) = acc_all{tr_type,2}(te_type-2,j) + sum(pos_ind);
+                                sub_rate{subInd,tr_type}(j,te_type - 2) = count/sum(pos_ind);
                             end
                         end
                     end
                     clear class_out class_true pos
                 end
             end
-            cm_temp = cm_all{i};
+            cm_temp = cm_all{te_type};
             for j = 1:size(cm,1)
                 for k = 1:size(cm,2)
                     cm_temp(j,k) = cm_temp(j,k) + cm(j,k);
                 end
             end
-            cm_all{i} = cm_temp;
+            cm_all{te_type} = cm_temp;
         end
     end
 end

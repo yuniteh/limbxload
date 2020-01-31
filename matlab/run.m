@@ -20,12 +20,13 @@ end
 [data_all, data_dof, subs_all] = compileSubs(subType,1); %1 for recompile
 
 %% cut data
-if strcmp(subType,'AB')
+if sum(data_all(:,2) == 4) > 0 
     ind = data_all(:,2) == 3;
     data_all(ind,:) = [];
     data_all(data_all(:,2) == 4,2) = 3;
     ind = data_all(:,4) == 5;
     data_all(ind,:) = [];
+    
     ind = data_dof(:,2) == 3;
     data_dof(ind,:) = [];
     data_dof(data_dof(:,2) == 4,2) = 3;
