@@ -1,18 +1,9 @@
 function [cm_all, acc_all, sub_rate, tr_data] = calcOffline(subType)
-% cval = 0, no cross validation, use full static training data
-% cval = 1, cross validation using same day static training data
+
 subAll = loadSubs(subType,1);
-win = 200;
 fold = 10;
-if strcmp(subType,'AB')
-    numLoads = 3;
-    numPos = 4;
-    loads = [0 400 600];
-else
-    numLoads = 3;
-    numPos = 4;
-    loads = [0 400 600];
-end
+numLoads = 3;
+numPos = 4;
 
 disp('Calculating offline accuracies')
 
@@ -101,6 +92,9 @@ for subInd = 1:size(subAll.subs,1)
                             if te_type == 3                                                           
                                 sup_ind = ind & params(:,3) ~= 1;               % index for no load, all positions except pos 1
                                 class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);           % initialize testing data classifier output
+                            else
+                                class_out = zeros(sum(ind),fold); 
+                            end
                                 class_true = class_out;                                             % initialize testing data ground truth
                                 pos = class_out;                                                    % initialize testing data position matrix
                                 for i_fold = 1:fold
