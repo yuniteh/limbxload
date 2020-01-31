@@ -28,14 +28,14 @@ for met = [15]
                     ave_all(sub,train) = ave;
                 end
                 %se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
-                %violinplot(ave_all(:,train),j);
+                %violinplot(ave_all(:,train),j,'PosSpec',j,'ViolinColor',cblue(j,:));
                 vplot(:,j) = ave_all(:,train);
                 %errorbar_ez('boxwhisk',j, ave_all(:,train),se,.4,cblue(j,:))
             end
         end
         assignin('base','vplot',vplot);
         vs = violinplot(vplot,1:j,'ShowData',true,'ShowViolin',false,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
-        assignin('base','vs',vs);
+        %assignin('base','vs',vs);
         ylim([0 100])
         minx = .4;
         maxx = p.nPos+.6;

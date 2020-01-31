@@ -17,25 +17,24 @@ for met = [15]
     for load = 1:p.nLoads
         axes(ax(fig_ind));
         hold all
-        ave_all = [];
         for j = 1:p.nPos
-            %ave_all = zeros(p.nSubs,2);
-            
+            ave_all = zeros(p.nSubs,2);
+%             ave_all = [];
             for train = 1
                 for sub = 1:p.nSubs
                     ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub & data_all(:,2) == load;
                     ave = nanmean(data_all(ind,met));
                     %plot(j,ave,'.','Color',cblue(j,:),'MarkerSize',8)
-                    ave_all = [ave_all; data_all(ind,met)];
+                    ave_all(sub,train) = ave;
                 end
                 %se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
-                %violinplot(ave_all(:,train),j);
-                vplot{j} = ave_all;%(:,train);
+                violinplot(ave_all(:,train),j,'PosSpec',j);
+                vplot(:,j) = ave_all(:,train);
                 %errorbar_ez('boxwhisk',j, ave_all(:,train),se,.4,cblue(j,:))
             end
         end
-        
-        vs = violinplot(vplot,1:j,'ShowData',false,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
+        assignin('base','vplot',vplot);
+        vs = violinplot(vplot,1:j,'ShowData',true,'ShowViolin',false,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
         assignin('base','vs',vs);
         ylim([0 100])
         minx = .4;
