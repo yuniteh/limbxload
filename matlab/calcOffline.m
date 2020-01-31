@@ -1,18 +1,9 @@
 function [cm_all, acc_all, sub_rate, tr_data] = calcOffline(subType)
-% cval = 0, no cross validation, use full static training data
-% cval = 1, cross validation using same day static training data
+
 subAll = loadSubs(subType,1);
-win = 200;
 fold = 10;
-if strcmp(subType,'AB')
-    numLoads = 3;
-    numPos = 4;
-    loads = [0 400 600];
-else
-    numLoads = 3;
-    numPos = 4;
-    loads = [0 400 600];
-end
+numLoads = 3;
+numPos = 4;
 
 disp('Calculating offline accuracies')
 
@@ -36,12 +27,13 @@ for subInd = 1:size(subAll.subs,1)
     path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
-        if strcmp(subType,'AB')         % remove position 5 and load = 500g
-            cut_ind = params(:,1) == 5;
+        if max(params(:,1)) > 5         % remove position 5 and load = 500g
+            cut_ind = params(:,1) == 5;         % cut load = 500g
             params(cut_ind,:) = [];
             params(params(:,1) == 6,1) = 5;
             feat(cut_ind,:) = [];
-            cut_ind = params(:,3) == 5;
+            
+            cut_ind = params(:,3) == 5;         % cut position 5
             params(cut_ind,:) = [];
             feat(cut_ind,:) = [];
         end
@@ -65,12 +57,15 @@ for subInd = 1:size(subAll.subs,1)
         class_ind = reshape(temp_class,[],1);
         [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         clear temp_class
-        for te_type = group'                      % loop through static, dynamic, feedforward
+        
+        % loop through classifying static, dynamic, feedforward data
+        for te_type = group'                      
             ind = params(:,1) == te_type;         % index for current testing data group
             if te_type < 3                        % accuracy within static and dynamic training sets, not v important
                 feat_temp = feat(ind,:);
                 true_temp = params(ind,:);
                 [train_ind, test_ind] = crossval(params(ind,2),fold);
+                
                 class_out = zeros(fold, size(test_ind,2));
                 class_true = class_out;
                 for i_fold = 1:fold
@@ -92,6 +87,7 @@ for subInd = 1:size(subAll.subs,1)
                             stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
                             cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
                             cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
+                            
                             % IF CLASSIFYING NO LOAD FEEDFORWARD CONDITION
                             if te_type == 3                                                           
                                 sup_ind = ind & params(:,3) ~= 1;               % index for no load, all positions except pos 1
@@ -133,18 +129,22 @@ for subInd = 1:size(subAll.subs,1)
                                 end
                             end
                         end
+                        
                     % TRAINING USING DYNAMIC DATA
                     else                    
                         for i_fold = 1:fold
                             train_feat = feat(class_ind(train_dyn),:);
+                            train_params = params(class_ind(train_dyn),:);
+                            test_feat = feat(ind,:);
+                            test_params = params(ind,:);
                             
                             % record position and class for confusion matrices
                             class_true(:,i_fold) = params(ind,2);
                             pos(:,i_fold) = params(ind,3);
                             
                             % train and classify
-                            [w,c] = trainLDA(train_feat,params(class_ind(train_dyn),2));
-                            [class_out(:,i_fold)] = classifyLDA(feat(ind,:),w,c);
+                            [w,c] = trainLDA(train_feat,train_params(:,2));
+                            [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
                         end
                         %                     k_max = 1;
                         %                     train_ind = params(:,1) == ii;
