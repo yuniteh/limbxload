@@ -37,13 +37,13 @@ for subInd = 1:size(subAll.subs,1)
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
         if strcmp(subType,'AB')         % remove position 5 and load = 500g
-            ind = params(:,1) == 5;
-            params(ind,:) = [];
+            cut_ind = params(:,1) == 5;
+            params(cut_ind,:) = [];
             params(params(:,1) == 6,1) = 5;
-            feat(ind,:) = [];
-            ind = params(:,3) == 5;
-            params(ind,:) = [];
-            feat(ind,:) = [];
+            feat(cut_ind,:) = [];
+            cut_ind = params(:,3) == 5;
+            params(cut_ind,:) = [];
+            feat(cut_ind,:) = [];
         end
         group = unique(params(:,1));
         
@@ -56,18 +56,18 @@ for subInd = 1:size(subAll.subs,1)
         end
         
         % create training and testing indices for feedforward dynamic
-        nsamps = (size(train_stat,2)+size(test_stat,2))/max(params(:,2));
+        nsamps = (size(train_stat,2)+size(test_stat,2))/max(params(:,2));           % number of samples from feedforward static
         for i = 1:max(params(:,2))
-            temp_ind = find(params(:,1) == 2 & params(:,2) == i);
-            temp_perm = temp_ind(randperm(length(temp_ind),length(temp_ind)));
-            temp_class(:,i) = temp_perm(1:nsamps);
+            temp_ind = find(params(:,1) == 2 & params(:,2) == i);                   % index for dynamic training in current DOF
+            temp_perm = temp_ind(randperm(length(temp_ind),length(temp_ind)));      % shuffle dynamic training data
+            temp_class(:,i) = temp_perm(1:nsamps);                                  % grab indices for same number of samples as feedforward static
         end
         class_ind = reshape(temp_class,[],1);
-        [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);
+        [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         clear temp_class
-        for i = group'                   % loop through static, dynamic, feedforward
+        for i = group'                      % loop through static, dynamic, feedforward
             ind = params(:,1) == i;
-            if i < 3
+            if i < 3                        % accuracy within static and dynamic training sets, not v important
                 feat_temp = feat(ind,:);
                 true_temp = params(ind,:);
                 [train_ind, test_ind] = crossval(params(ind,2),fold);
@@ -82,15 +82,16 @@ for subInd = 1:size(subAll.subs,1)
                 class_out = reshape(class_out,1,[]);
                 cm = confusionmat(class_true,class_out);
                 sub_rate{subInd,i} = NaN(numPos,numLoads);
-            else
-                for ii = 1:2 % 1 = static, 2 = dynamic
-                    if ii == 1  % use cross validation for static training
-                        if skip ~= 1    % skip if data was corrupted
+            else                            % accuracy for feedforward data
+                for ii = 1:2                % 1 = static, 2 = dynamic
+                    % CLASSIFYING USING STATIC FEEDFORWARD DATA
+                    if ii == 1              
+                        if skip ~= 1        % skip if data was corrupted
                             k_max = fold;
                             stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
-                            cur_feat = feat(stat_ind,:);
-                            cur_params = params(stat_ind,:);
-                            if i == 3
+                            cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
+                            cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
+                            if i == 3       % if classifying static feedforward                        
                                 sup_ind = ind & params(:,3) ~= 1;
                                 class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);
                                 class_true = class_out;
@@ -108,7 +109,7 @@ for subInd = 1:size(subAll.subs,1)
                                     te_data{1,j} = test_feat;
                                     te_data{2,j} = class_true(:,j);
                                 end
-                            else
+                            else            % if classifying other feedforward conditions
                                 class_out = zeros(sum(ind),fold);
                                 class_true = class_out;
                                 pos = class_out;
@@ -120,7 +121,8 @@ for subInd = 1:size(subAll.subs,1)
                                 end
                             end
                         end
-                    else
+                    % CLASSIFYING USING DYNAMIC DATA
+                    else                    
                         k_max = fold;
                         for j = 1:fold
                             train_feat = feat(class_ind(train_dyn),:);
@@ -136,6 +138,8 @@ for subInd = 1:size(subAll.subs,1)
                         %                     class_true = params(ind,2);
                         %                     class_out = classifyLDA(feat(ind,:),w,c);
                     end
+                    
+                    % COMBINING RESULTS ACROSS SUBJECTS
                     if skip ~= 1
                         for j = 1:max(params(:,3))
                             for k = 1:k_max
