@@ -1,4 +1,4 @@
-function [cm_all, acc_all, sub_rate, tr_data] = calcOffline(subType)
+function [cm_all, acc_all, sub_rate, tr_data, te_data] = calcOffline(subType)
 
 subAll = loadSubs(subType,1);
 fold = 10;
@@ -27,6 +27,8 @@ for subInd = 1:size(subAll.subs,1)
     path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
+        feat_full = feat;
+        params_full = params;
         if max(params(:,1)) > 5         % remove position 5 and load = 500g
             cut_ind = params(:,1) == 5;         % cut load = 500g
             params(cut_ind,:) = [];
