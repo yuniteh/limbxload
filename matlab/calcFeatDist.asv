@@ -1,0 +1,77 @@
+function calcFeatDist(train_data, test_data)
+
+nPos = max(train_data(:,3));
+nLoad = max(train_data(:,1)) - 2;
+nClass = max(train_data(:,2));
+
+m_dist = cell(nLoad,nPos,max(params(:,2)));                 % mahalanobis distance
+RI = nan(nLoad,nPos, max(params(:,2)));                     % repeatability index
+MSA = RI;                                                   % mean semi-principal axis
+SI_tr = nan(nPos,nClass);
+SI2 = nan(nLoad,nPos,max(params(:,2)));
+SI_class = SI;
+
+for pos = 1:nPos
+    for cl = 1:nClass
+        test_feat = test_data(test_data(:,2) == cl & test_data(:,3) == pos,4:end);
+        train_feat = train_data(train_data(:,2) == cl,4:end);
+        
+        test_cen = mean(test_feat);
+        test_ax = 2.*std(test_feat);
+        train_cen = mean(train_feat);
+        train_ax = 2.*std(train_feat);
+        
+        RI(pos,cl) = modmahal(test_feat,train_feat);
+        MSA_tr(pos,cl) = geomean(train_ax);
+        MSA_te(pos,cl) = geomean(test_ax);
+        
+        for SI_cl = 1:nClass
+            SI_feat = train_data(train_data(:,2) == SI_cl,4:end);
+            if cl ~= SI_cl
+                SI_trtemp = modmahal(train_feat,SI_feat);
+                if SI_trtemp < SI_tr(pos,cl) || isnan(SI_tr(pos,cl))
+                    SI_tr(pos,cl) = SI_trtemp;
+                end
+                
+                SI_tetemp = modmahal(test_feat,SI_feat);
+                
+            end
+        end
+    end
+end
+
+for load_i = 1:nLoad
+    for pos = 1:nPos
+        for cl = 1:nClass
+            test_feat = test_data(test_data(:,1) == load_i+2 & test_data(:,2) == cl & test_data(:,3) == pos,4:end);
+            train_feat = train_data(test_data(:,1) == load_i+2 & test_data(:,2) == cl & test_data(:,3) == pos,4:end);
+            if ~isempty(train_feat) && ~isempty(test_feat)
+                test_cen = mean(test_feat);         % testing data centroid
+                test_ax = 2.*std(test_feat);        % testing data semi-principal axis
+                stat_cen = mean(train_feat);         % static data centroid
+                stat_ax = 2.*std(train_feat);        % static data semi-principal axis
+                
+                m_dist{load_i,pos,cl} = sqrt(mahal(test_feat,train_feat));
+                RI(load_i,pos,cl) = modmahal(test_feat,train_feat);
+                MSA(load_i,pos,cl) = geomean(test_ax);
+                
+                % SI calculation
+                for c = 1:max(params(:,2))
+                    SI_feat = feat(params(:,1) == 3 & params(:,2) == c & params(:,3) == 1,:);
+                    SI_temp = modmahal(test_feat,SI_feat);
+                    if SI_temp < SI(load_i,pos,cl) || isnan(SI(load_i,pos,cl))
+                        if c ~= cl
+                            SI(load_i,pos,cl) = SI_temp;
+                        end
+                    end
+                    if SI_temp < SI2(load_i,pos,cl) || isnan(SI2(load_i,pos,cl))
+                        SI2(load_i,pos,cl) = SI_temp;
+                        SI_class(load_i,pos,cl) = c;
+                    end
+                    
+                end
+            end
+        end
+    end
+end
+end
