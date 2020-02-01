@@ -1,7 +1,7 @@
-function [cm_all, acc_all, sub_rate, tr_data, te_data] = calcOffline(subType)
+function [cm_all, acc_all, sub_rate, FS] = calcOffline(subType)
 
 subAll = loadSubs(subType,1);
-fold = 10;
+fold = 1;
 numLoads = 3;
 numPos = 4;
 
@@ -21,12 +21,14 @@ end
 
 % initialize offline accuracy matrix
 sub_rate = cell(size(subAll.subs,1),2);
+FS = cell(size(subAll.subs,1),1);
 
 for subInd = 1:size(subAll.subs,1)
     sub = subAll.subs{subInd};
     path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
+        
         feat_full = feat;
         params_full = params;
         if max(params(:,1)) > 5         % remove position 5 and load = 500g
@@ -41,6 +43,9 @@ for subInd = 1:size(subAll.subs,1)
             feat(cut_ind,:) = [];
         end
         group = unique(params(:,1));
+        nClass = max(params(:,2));
+        nPos = max(params(:,3));
+        nLoad = max(params(:,1) - 2);
         
         % create training and testing indices for feedforward static
         if sum(params(:,1) == 3) > 0
@@ -60,6 +65,10 @@ for subInd = 1:size(subAll.subs,1)
         class_ind = reshape(temp_class,[],1);
         [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         clear temp_class
+        
+        RI_all = cell(nLoad,1);
+        MSA_te_all = RI_all;
+        SI_te_all = RI_all;
         
         % loop through classifying static, dynamic, feedforward data
         for te_type = group'
@@ -84,9 +93,12 @@ for subInd = 1:size(subAll.subs,1)
                 % ACCURACY FOR FEEDFORWARD DATA
             else
                 for tr_type = 1:2               % 1 = static, 2 = dynamic
+                    class_out = zeros(sum(ind),fold);
+                    class_true = class_out;                                             % initialize testing data ground truth
+                    pos = class_out;
                     % TRAINING USING STATIC FEEDFORWARD DATA
                     if tr_type == 1
-                        if skip ~= 1            % skip if data was corrupted
+                        if skip ~= 1                                            % skip if data was corrupted
                             stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
                             cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
                             cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
@@ -95,12 +107,16 @@ for subInd = 1:size(subAll.subs,1)
                             if te_type == 3
                                 sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
                                 class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
-                            else
-                                class_out = zeros(sum(ind),fold);                               % initialize testing data classifier output
+                                class_true = class_out;                                             % initialize testing data ground truth
+                                pos = class_out;                                                    % initialize testing data position matrix
                             end
                             
-                            class_true = class_out;                                             % initialize testing data ground truth
-                            pos = class_out;                                                    % initialize testing data position matrix
+                            
+                            RI = zeros(nPos,nClass);
+                            MSA_te = RI;
+                            SI_te = RI;
+                            MSA_tr = zeros(1,nClass);
+                            SI_tr = MSA_tr;
                             
                             % cross validation
                             for i_fold = 1:fold
@@ -121,10 +137,23 @@ for subInd = 1:size(subAll.subs,1)
                                 % train and classify
                                 [w,c] = trainLDA(train_feat, train_params(:,2));
                                 [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
+                                
+                                % calculate feature space metrics
+                                [tmp_RI, tmp_MSA_tr, tmp_MSA_te, tmp_SI_tr, tmp_SI_te] = ...
+                                    calcFeatDist([train_params train_feat],[test_params test_feat]);
+                                
+                                RI = RI + tmp_RI./fold;
+                                MSA_te = MSA_te + tmp_MSA_te./fold;
+                                SI_te = SI_te + tmp_SI_te./fold;
+                                MSA_tr = MSA_tr + tmp_MSA_tr./fold;
+                                SI_tr = SI_tr + tmp_SI_tr./fold;
                             end
+                            RI_all{te_type - 2} = RI;
+                            MSA_te_all{te_type - 2} = MSA_te;
+                            SI_te_all{te_type - 2} = SI_te;
                         end
                         
-                    % TRAINING USING DYNAMIC DATA
+                        % TRAINING USING DYNAMIC DATA
                     elseif tr_type == 2
                         for i_fold = 1:fold
                             train_feat = feat(class_ind(train_dyn),:);
@@ -171,6 +200,11 @@ for subInd = 1:size(subAll.subs,1)
             end
             cm_all{te_type} = cm_temp;
         end
+        FS{subInd}.RI = RI_all;
+        FS{subInd}.MSA_tr = MSA_tr;
+        FS{subInd}.MSA_te = MSA_te_all;
+        FS{subInd}.SI_tr = SI_tr;
+        FS{subInd}.SI_te = SI_te_all;
     end
 end
 for i = 1:2

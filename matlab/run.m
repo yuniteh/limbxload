@@ -34,7 +34,7 @@ if sum(data_all(:,2) == 4) > 0
     data_dof(ind,:) = [];
 end
 %%
-[cm_all, acc_all, sub_rate, tr_data, te_data] = calcOffline(subType);
+[cm_all, acc_all, sub_rate, FS] = calcOffline(subType);
 data_all = combineData(data_all,sub_rate);
 %%
 uisave({'data_all','data_dof','subs_all','cm_all','acc_all'},'alldata')

@@ -1,13 +1,14 @@
 function [RI, MSA_tr, MSA_te, SI_tr, SI_te] = calcFeatDist(train_data, test_data)
 
-nPos = max(train_data(:,3));
+nPos = max(test_data(:,3));
 nClass = max(train_data(:,2));
 
 RI = nan(nPos,nClass);                     % repeatability index
-MSA_tr = RI;                               % mean semi-principal axis
 MSA_te = RI;
-SI_tr = RI;
 SI_te = RI;
+MSA_tr = nan(1,nClass);                               % mean semi-principal axis
+SI_tr = MSA_tr;
+
 
 for pos = 1:nPos
     for cl = 1:nClass
@@ -20,15 +21,15 @@ for pos = 1:nPos
         train_ax = 2.*std(train_feat);
         
         RI(pos,cl) = modmahal(test_feat,train_feat);
-        MSA_tr(pos,cl) = geomean(train_ax);
+        MSA_tr(cl) = geomean(train_ax);
         MSA_te(pos,cl) = geomean(test_ax);
         
         for SI_cl = 1:nClass
             SI_feat = train_data(train_data(:,2) == SI_cl,4:end);
             if cl ~= SI_cl
                 SI_trtemp = modmahal(train_feat,SI_feat);
-                if SI_trtemp < SI_tr(pos,cl) || isnan(SI_tr(pos,cl))
-                    SI_tr(pos,cl) = SI_trtemp;
+                if SI_trtemp < SI_tr(cl) || isnan(SI_tr(cl))
+                    SI_tr(cl) = SI_trtemp;
                 end
                 
                 SI_tetemp = modmahal(test_feat,SI_feat);
