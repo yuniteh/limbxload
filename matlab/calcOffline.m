@@ -21,7 +21,7 @@ end
 
 % initialize offline accuracy matrix
 sub_rate = cell(size(subAll.subs,1),2);
-featAll = cell(size(subAll.subs,1),numLoads);
+featAll = cell(size(subAll.subs,1),2,numLoads);
 newFeat = true;
 
 for subInd = 1:size(subAll.subs,1)
@@ -30,8 +30,6 @@ for subInd = 1:size(subAll.subs,1)
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
         
-        feat_full = feat;
-        params_full = params;
         if max(params(:,1)) > 5         % remove position 5 and load = 500g
             cut_ind = params(:,1) == 5;         % cut load = 500g
             params(cut_ind,:) = [];
@@ -45,20 +43,19 @@ for subInd = 1:size(subAll.subs,1)
         end
         group = unique(params(:,1));
         nClass = max(params(:,2));
-        nPos = max(params(:,3));
-        nLoad = max(params(:,1) - 2);
         
         % create training and testing indices for feedforward static
         if sum(params(:,1) == 3) > 0
-            skip = 0;
+            tr_start = 1;
             [train_stat, test_stat] = crossval(params(params(:,1) == 3 & params(:,3) == 1,2),fold);
         else
-            skip = 1;
+            tr_start = 2;
         end
         
         % create training and testing indices for feedforward dynamic
-        nsamps = (size(train_stat,2)+size(test_stat,2))/max(params(:,2));           % number of samples from feedforward static
-        for i = 1:max(params(:,2))
+        nsamps = (size(train_stat,2)+size(test_stat,2))/nClass;           % number of samples from feedforward static
+        temp_class = nan(nsamps,nClass);
+        for i = 1:nClass
             temp_ind = find(params(:,1) == 2 & params(:,2) == i);                   % index for dynamic training in current DOF
             temp_perm = temp_ind(randperm(length(temp_ind),length(temp_ind)));      % shuffle dynamic training data
             temp_class(:,i) = temp_perm(1:nsamps);                                  % grab indices for same number of samples as feedforward static
@@ -89,100 +86,106 @@ for subInd = 1:size(subAll.subs,1)
                 
                 % ACCURACY FOR FEEDFORWARD DATA
             else
-                for tr_type = 1:2               % 1 = static, 2 = dynamic
+                for tr_type = tr_start:1               % 1 = static, 2 = dynamic
                     class_out = zeros(sum(ind),fold);
                     class_true = class_out;                                             % initialize testing data ground truth
                     pos = class_out;
                     % TRAINING USING STATIC FEEDFORWARD DATA
-                    if tr_type == 1
-                        if skip ~= 1                                            % skip if data was corrupted
-                            stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
-                            cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
-                            cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
-                            
-                            % IF CLASSIFYING NO LOAD FEEDFORWARD CONDITION
-                            if te_type == 3
-                                sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
-                                class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
-                                class_true = class_out;                                             % initialize testing data ground truth
-                                pos = class_out;                                                    % initialize testing data position matrix
-                            end
-                            
-                            % cross validation
-                            for i_fold = 1:fold
+                    %                     if tr_type == 1
+%                     if skip ~= 1                                            % skip if data was corrupted
+                        stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
+                        cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
+                        cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
+                        
+                        % IF CLASSIFYING NO LOAD FEEDFORWARD CONDITION
+                        if te_type == 3 && tr_type == 1
+                            sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
+                            class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
+                            class_true = class_out;                                             % initialize testing data ground truth
+                            pos = class_out;                                                    % initialize testing data position matrix
+                        end
+                        
+                        % cross validation
+                        for i_fold = 1:fold
+                            test_feat = feat(ind,:);
+                            test_params = params(ind,:);
+                            if tr_type == 1
                                 train_feat = cur_feat(train_stat(i_fold,:),:);
                                 train_params = cur_params(train_stat(i_fold,:),:);
                                 if te_type == 3
                                     test_feat = [cur_feat(test_stat(i_fold,:),:); feat(sup_ind,:)];
                                     test_params = [cur_params(test_stat(i_fold,:),:); params(sup_ind,:)];
-                                else
-                                    test_feat = feat(ind,:);
-                                    test_params = params(ind,:);
                                 end
-                                
-                                % record position and class for confusion matrices
-                                class_true(:,i_fold) = test_params(:,2);
-                                pos(:,i_fold) = test_params(:,3);
-                                
-                                % train and classify
-                                [w,c] = trainLDA(train_feat, train_params(:,2));
-                                [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
-                                
-                                % calculate feature space metrics
-                                featTemp = calcFeatDist([train_params train_feat],[test_params test_feat]);
-                                
-                                % running average of feature space metrics
-                                f = fieldnames(featTemp);
-                                for names = 1:length(f)
-                                    if newFeat
-                                        featOut.(f{names}) = zeros(size(featTemp.(f{names})));
-                                    end
-                                    featOut.(f{names}) = featOut.(f{names}) + featTemp.(f{names})./fold;
-                                end
-                                newFeat = false;
+                            elseif tr_type == 2
+                                train_feat = feat(class_ind(train_dyn),:);
+                                train_params = params(class_ind(train_dyn),:);
                             end
-                        end
-                        
-                        % TRAINING USING DYNAMIC DATA
-                    elseif tr_type == 2
-                        for i_fold = 1:fold
-                            train_feat = feat(class_ind(train_dyn),:);
-                            train_params = params(class_ind(train_dyn),:);
-                            test_feat = feat(ind,:);
-                            test_params = params(ind,:);
                             
                             % record position and class for confusion matrices
                             class_true(:,i_fold) = test_params(:,2);
-                            pos(:,i_fold) = test_params(:,2);
+                            pos(:,i_fold) = test_params(:,3);
                             
                             % train and classify
-                            [w,c] = trainLDA(train_feat,train_params(:,2));
+                            [w,c] = trainLDA(train_feat, train_params(:,2));
                             [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
+                            
+                            % calculate feature space metrics
+                            featTemp = calcFeatDist([train_params train_feat],[test_params test_feat]);
+                            
+                            % running average of feature space metrics
+                            f = fieldnames(featTemp);
+                            for names = 1:length(f)
+                                if newFeat
+                                    featOut.(f{names}) = zeros(size(featTemp.(f{names})));
+                                end
+                                featOut.(f{names}) = featOut.(f{names}) + featTemp.(f{names})./fold;
+                            end
+                            newFeat = false;
                         end
-                        %                     k_max = 1;
-                        %                     train_ind = params(:,1) == ii;
-                        %                     [w,c] = trainLDA(feat(train_ind,:), params(train_ind,2));
-                        %                     pos = params(ind,3);
-                        %                     class_true = params(ind,2);
-                        %                     class_out = classifyLDA(feat(ind,:),w,c);
-                    end
+%                     end
+                    
+                    % TRAINING USING DYNAMIC DATA
+                    %                     elseif tr_type == 2
+                    %                         for i_fold = 1:fold
+                    %                             train_feat = feat(class_ind(train_dyn),:);
+                    %                             train_params = params(class_ind(train_dyn),:);
+                    %                             test_feat = feat(ind,:);
+                    %                             test_params = params(ind,:);
+                    %
+                    %                             % record position and class for confusion matrices
+                    %                             class_true(:,i_fold) = test_params(:,2);
+                    %                             pos(:,i_fold) = test_params(:,2);
+                    %
+                    %                             % train and classify
+                    %                             [w,c] = trainLDA(train_feat,train_params(:,2));
+                    %                             [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
+                    %                         end
+                    %                     k_max = 1;
+                    %                     train_ind = params(:,1) == ii;
+                    %                     [w,c] = trainLDA(feat(train_ind,:), params(train_ind,2));
+                    %                     pos = params(ind,3);
+                    %                     class_true = params(ind,2);
+                    %                     class_out = classifyLDA(feat(ind,:),w,c);
+                    %                     end
                     
                     % COMBINING RESULTS ACROSS SUBJECTS
-                    if skip ~= 1
-                        for j = 1:max(params(:,3))
-                            for k = 1:fold
-                                pos_ind = pos(:,k) == j;
-                                count = sum(class_out(pos_ind,k) == class_true(pos_ind,k));
-                                acc_all{tr_type,1}(te_type - 2,j) = acc_all{tr_type,1}(te_type-2,j) + count;
-                                acc_all{tr_type,2}(te_type - 2,j) = acc_all{tr_type,2}(te_type-2,j) + sum(pos_ind);
-                                sub_rate{subInd,tr_type}(j,te_type - 2) = count/sum(pos_ind);
-                            end
-                        end
-                        % combine feats
-                        if tr_type == 1
-                            featAll{subInd,te_type-2} = featOut;
+                    %if tr_start ~= 1
+                    for j = 1:max(params(:,3))
+                        for k = 1:fold
+                            pos_ind = pos(:,k) == j;
+                            count = sum(class_out(pos_ind,k) == class_true(pos_ind,k));
+                            acc_all{tr_type,1}(te_type - 2,j) = acc_all{tr_type,1}(te_type-2,j) + count;
+                            acc_all{tr_type,2}(te_type - 2,j) = acc_all{tr_type,2}(te_type-2,j) + sum(pos_ind);
+                            sub_rate{subInd,tr_type}(j,te_type - 2) = count/sum(pos_ind);
                         end
                     end
+                    % combine feats
+                    if tr_type == 1
+                        featAll{subInd,tr_type,te_type-2} = featOut;
+                    end
+                    %                     else
+                    
+                    %                     end
                     
                     clearvars class_out class_true pos featOut
                     newFeat = true;
