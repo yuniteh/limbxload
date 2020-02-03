@@ -1,7 +1,7 @@
-function [cm_all, acc_all, sub_rate, FS] = calcOffline(subType)
+function [cm_all, acc_all, sub_rate, featAll] = calcOffline(subType)
 
 subAll = loadSubs(subType,1);
-fold = 1;
+fold = 10;
 numLoads = 3;
 numPos = 4;
 
@@ -21,7 +21,8 @@ end
 
 % initialize offline accuracy matrix
 sub_rate = cell(size(subAll.subs,1),2);
-FS = cell(size(subAll.subs,1),1);
+featAll = cell(size(subAll.subs,1),numLoads);
+newFeat = true;
 
 for subInd = 1:size(subAll.subs,1)
     sub = subAll.subs{subInd};
@@ -66,10 +67,6 @@ for subInd = 1:size(subAll.subs,1)
         [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         clear temp_class
         
-        RI_all = cell(nLoad,1);
-        MSA_te_all = RI_all;
-        SI_te_all = RI_all;
-        
         % loop through classifying static, dynamic, feedforward data
         for te_type = group'
             ind = params(:,1) == te_type;         % index for current testing data group
@@ -111,13 +108,6 @@ for subInd = 1:size(subAll.subs,1)
                                 pos = class_out;                                                    % initialize testing data position matrix
                             end
                             
-                            
-                            RI = zeros(nPos,nClass);
-                            MSA_te = RI;
-                            SI_te = RI;
-                            MSA_tr = zeros(1,nClass);
-                            SI_tr = MSA_tr;
-                            
                             % cross validation
                             for i_fold = 1:fold
                                 train_feat = cur_feat(train_stat(i_fold,:),:);
@@ -139,18 +129,18 @@ for subInd = 1:size(subAll.subs,1)
                                 [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
                                 
                                 % calculate feature space metrics
-                                [tmp_RI, tmp_MSA_tr, tmp_MSA_te, tmp_SI_tr, tmp_SI_te] = ...
-                                    calcFeatDist([train_params train_feat],[test_params test_feat]);
+                                featTemp = calcFeatDist([train_params train_feat],[test_params test_feat]);
                                 
-                                RI = RI + tmp_RI./fold;
-                                MSA_te = MSA_te + tmp_MSA_te./fold;
-                                SI_te = SI_te + tmp_SI_te./fold;
-                                MSA_tr = MSA_tr + tmp_MSA_tr./fold;
-                                SI_tr = SI_tr + tmp_SI_tr./fold;
+                                % running average of feature space metrics
+                                f = fieldnames(featTemp);
+                                for names = 1:length(f)
+                                    if newFeat
+                                        featOut.(f{names}) = zeros(size(featTemp.(f{names})));
+                                    end
+                                    featOut.(f{names}) = featOut.(f{names}) + featTemp.(f{names})./fold;
+                                end
+                                newFeat = false;
                             end
-                            RI_all{te_type - 2} = RI;
-                            MSA_te_all{te_type - 2} = MSA_te;
-                            SI_te_all{te_type - 2} = SI_te;
                         end
                         
                         % TRAINING USING DYNAMIC DATA
@@ -188,8 +178,14 @@ for subInd = 1:size(subAll.subs,1)
                                 sub_rate{subInd,tr_type}(j,te_type - 2) = count/sum(pos_ind);
                             end
                         end
+                        % combine feats
+                        if tr_type == 1
+                            featAll{subInd,te_type-2} = featOut;
+                        end
                     end
-                    clear class_out class_true pos
+                    
+                    clearvars class_out class_true pos featOut
+                    newFeat = true;
                 end
             end
             cm_temp = cm_all{te_type};
@@ -200,11 +196,6 @@ for subInd = 1:size(subAll.subs,1)
             end
             cm_all{te_type} = cm_temp;
         end
-        FS{subInd}.RI = RI_all;
-        FS{subInd}.MSA_tr = MSA_tr;
-        FS{subInd}.MSA_te = MSA_te_all;
-        FS{subInd}.SI_tr = SI_tr;
-        FS{subInd}.SI_te = SI_te_all;
     end
 end
 for i = 1:2

@@ -1,12 +1,12 @@
-function [RI, MSA_tr, MSA_te, SI_tr, SI_te] = calcFeatDist(train_data, test_data)
+function out = calcFeatDist(train_data, test_data)
 
 nPos = max(test_data(:,3));
 nClass = max(train_data(:,2));
 
-RI = nan(nPos,nClass);                     % repeatability index
+RI = nan(nPos,nClass);                                
 MSA_te = RI;
 SI_te = RI;
-MSA_tr = nan(1,nClass);                               % mean semi-principal axis
+MSA_tr = nan(1,nClass);                               
 SI_tr = MSA_tr;
 
 
@@ -40,4 +40,11 @@ for pos = 1:nPos
         end
     end
 end
+
+out.RI = RI;
+out.MSA_tr = MSA_tr;
+out.SI_tr = SI_tr;
+out.MSA_te = MSA_te;
+out.SI_te = SI_te;
+
 end

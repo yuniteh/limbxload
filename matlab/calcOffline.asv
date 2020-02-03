@@ -1,7 +1,7 @@
 function [cm_all, acc_all, sub_rate, FS] = calcOffline(subType)
 
 subAll = loadSubs(subType,1);
-fold = 10;
+fold = 1;
 numLoads = 3;
 numPos = 4;
 
@@ -93,6 +93,9 @@ for subInd = 1:size(subAll.subs,1)
                 % ACCURACY FOR FEEDFORWARD DATA
             else
                 for tr_type = 1:2               % 1 = static, 2 = dynamic
+                    class_out = zeros(sum(ind),fold);
+                    class_true = class_out;                                             % initialize testing data ground truth
+                    pos = class_out;
                     % TRAINING USING STATIC FEEDFORWARD DATA
                     if tr_type == 1
                         if skip ~= 1                                            % skip if data was corrupted
@@ -104,12 +107,9 @@ for subInd = 1:size(subAll.subs,1)
                             if te_type == 3
                                 sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
                                 class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
-                            else
-                                class_out = zeros(sum(ind),fold);                               % initialize testing data classifier output
+                                class_true = class_out;                                             % initialize testing data ground truth
+                                pos = class_out;                                                    % initialize testing data position matrix
                             end
-                            
-                            class_true = class_out;                                             % initialize testing data ground truth
-                            pos = class_out;                                                    % initialize testing data position matrix
                             
                             RI = zeros(nPos,nClass);
                             MSA_te = RI;
@@ -138,14 +138,13 @@ for subInd = 1:size(subAll.subs,1)
                                 [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
                                 
                                 % calculate feature space metrics
-                                [tmp_RI, tmp_MSA_tr, tmp_MSA_te, tmp_SI_tr, tmp_SI_te] = ...
-                                    calcFeatDist([train_params train_feat],[test_params test_feat]);
+                                featTemp = calcFeatDist([train_params train_feat],[test_params test_feat]);
                                 
-                                RI = RI + tmp_RI./fold;
-                                MSA_te = MSA_te + tmp_MSA_te./fold;
-                                SI_te = SI_te + tmp_SI_te./fold;
-                                MSA_tr = MSA_tr + tmp_MSA_tr./fold;
-                                SI_tr = SI_tr + tmp_SI_tr./fold;
+                                % running average of feature space metrics
+                                f = fieldnames(featTemp);
+                                for names = 1:length(f)
+                                    featOut.(f{names}) = featOut.(f{names}) + featTemp.(f{names})./fold;
+                                end
                             end
                             RI_all{te_type - 2} = RI;
                             MSA_te_all{te_type - 2} = MSA_te;
@@ -174,20 +173,6 @@ for subInd = 1:size(subAll.subs,1)
                         %                     pos = params(ind,3);
                         %                     class_true = params(ind,2);
                         %                     class_out = classifyLDA(feat(ind,:),w,c);
-                    elseif tr_type == 3
-                        stat_ind = params(:,1) == 1;% & params(:,3) == 1;
-                        train_feat = feat(stat_ind,:);
-                        train_params = params(stat_ind,:);
-                        test_feat = feat(ind,:);
-                        test_params = params(ind,:);
-                        
-                        % record position and class for confusion matrices
-                        class_true(:,i_fold) = test_params(:,2);
-                        pos(:,i_fold) = test_params(:,2);
-                        
-                        % train and classify
-                        [w,c] = trainLDA(train_feat,train_params(:,2));
-                        [class_out(:,i_fold)] = classifyLDA(test_feat,w,c);
                     end
                     
                     % COMBINING RESULTS ACROSS SUBJECTS
@@ -203,6 +188,9 @@ for subInd = 1:size(subAll.subs,1)
                         end
                     end
                     clear class_out class_true pos
+                    
+                    %
+                    featAll{subInd,tr_type,te_type} = 
                 end
             end
             cm_temp = cm_all{te_type};
@@ -213,11 +201,6 @@ for subInd = 1:size(subAll.subs,1)
             end
             cm_all{te_type} = cm_temp;
         end
-        FS{subInd}.RI = RI_all;
-        FS{subInd}.MSA_tr = MSA_tr;
-        FS{subInd}.MSA_te = MSA_te_all;
-        FS{subInd}.SI_tr = SI_tr;
-        FS{subInd}.SI_te = SI_te_all;
     end
 end
 for i = 1:2
