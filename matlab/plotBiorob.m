@@ -20,7 +20,7 @@ for met = [15]
         for j = 1:p.nPos
             ave_all = zeros(p.nSubs,2);
 %             ave_all = [];
-            for train = 1
+            for train = 2
                 for sub = 1:p.nSubs
                     ind = data_all(:,3) == train & data_all(:,4) == j & data_all(:,1) == sub & data_all(:,2) == load;
                     ave = nanmean(data_all(ind,met));
