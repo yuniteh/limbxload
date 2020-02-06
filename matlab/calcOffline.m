@@ -77,10 +77,11 @@ for subInd = 1:size(subAll.subs,1)
         [train_dyn, test_dyn] = crossval(params(class_ind,2),fold);                 % create crossval indices for dynamic training
         
         for k_fold = 1:fold
-            train_feat{1,k_fold} = cur_feat(train_stat(k_fold,:),:);
-            train_params{1,k_fold} = cur_params(train_stat(k_fold,:),:);
-            [w{1,k_fold},c{1,k_fold}] = trainLDA(train_feat{1,k_fold}, train_params{1,k_fold}(:,2));
-            
+            if tr_start == 1
+                train_feat{1,k_fold} = cur_feat(train_stat(k_fold,:),:);
+                train_params{1,k_fold} = cur_params(train_stat(k_fold,:),:);
+                [w{1,k_fold},c{1,k_fold}] = trainLDA(train_feat{1,k_fold}, train_params{1,k_fold}(:,2));
+            end
             train_feat{2,k_fold} = feat(class_ind(train_dyn(k_fold,:)),:);
             train_params{2,k_fold} = params(class_ind(train_dyn(k_fold,:)),:);
             [w{2,k_fold},c{2,k_fold}] = trainLDA(train_feat{2,k_fold}, train_params{2,k_fold}(:,2));
@@ -109,23 +110,16 @@ for subInd = 1:size(subAll.subs,1)
                 % ACCURACY FOR FEEDFORWARD DATA
             else
                 for tr_type = tr_start:numTr               % 1 = static, 2 = dynamic
-                    class_out = zeros(sum(ind),fold);
-                    class_true = class_out;                                             % initialize testing data ground truth
-                    pos = class_out;
-                    
-                    if tr_type == 1
-                        % TRAINING USING STATIC FEEDFORWARD DATA
-                        stat_ind = params(:,1) == 3 & params(:,3) == 1;     % index for no load, pos 1 feedforward
-                        cur_feat = feat(stat_ind,:);                        % features for no load, pos 1 feedforward
-                        cur_params = params(stat_ind,:);                    % params for no load, pos 1 feedforward
-                        
+                    if tr_type == 1 && te_type == 3
                         % IF CLASSIFYING NO LOAD FEEDFORWARD CONDITION
-                        if te_type == 3
-                            sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
-                            class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
-                            class_true = class_out;                                             % initialize testing data ground truth
-                            pos = class_out;                                                    % initialize testing data position matrix
-                        end
+                        sup_ind = ind & params(:,3) ~= 1;                               % index for no load, all positions except pos 1
+                        class_out = zeros(size(test_stat,2) + sum(sup_ind),fold);       % initialize testing data classifier output
+                        class_true = class_out;                                             % initialize testing data ground truth
+                        pos = class_out;                                                    % initialize testing data position matrix
+                    else
+                        class_out = zeros(sum(ind),fold);
+                        class_true = class_out;                                             % initialize testing data ground truth
+                        pos = class_out;
                     end
                     
                     % cross validation
@@ -143,7 +137,6 @@ for subInd = 1:size(subAll.subs,1)
                         pos(:,i_fold) = test_params(:,3);
                         
                         % train and classify
-                        %[w,c] = trainLDA(train_feat, train_params(:,2));
                         [class_out(:,i_fold)] = classifyLDA(test_feat,w{tr_type,i_fold},c{tr_type,i_fold});
                         
                         % calculate feature space metrics

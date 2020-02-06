@@ -24,11 +24,15 @@ nClass = 7;
 
 f = fieldnames(FS2{1,1,1});
 
-for tr = 1:size(FS2,2)
-    for ld = 1:size(FS2,3)
-        for sub = 1:size(FS2,1)
+for tr = 1:size(FS,2)
+    for ld = 1:size(FS,3)
+        for sub = 1:size(FS,1)
             for names = 1:length(f)
-                temp.(f{names})(sub,:,:) = FS2{sub,tr,ld}.(f{names});
+                if ~isempty(FS{sub,tr,ld})
+                    temp.(f{names})(sub,:,:) = FS2{sub,tr,ld}.(f{names});
+                else
+                    temp.(f{names})(sub,:,:) = NaN(1,size(FS{1,1,1}.(f{names}),1),2);
+                end
             end
         end
         for names = 1:length(f)
