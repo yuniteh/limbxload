@@ -115,31 +115,30 @@ switch type
             end
         end
     case 3
-        carray = repmat(cblue(1:p.nPos,:),3,1);
         figure
         hold all
         for met = [6]
-            vplot = NaN(p.nSubs,p.nLoads*p.nPos);
+            vplot = NaN(p.nLoads*p.nPos*p.nSubs,p.nLoads*p.nPos);
+            vind = 1;
             for tr_ld = 1:p.nLoads
+                
                 for tr_pos = 1:p.nPos
-                    vind = 1;
-                    for sub = 1:p.nSubs
-%                         for test_ld = 1:p.nLoads
-%                             for test_pos = 1:p.nPos
-                                ind = data_all(:,1) == sub & data_all(:,3) == tr_pos & data_all(:,2) == tr_ld;% & data_all(:,4) == test_pos & data_all(:,5) == test_ld;
-                                vplot(sub,tr_pos + 4*(tr_ld-1)) = nanmean(data_all(ind,met));
+                    for test_ld = 1:p.nLoads
+                        for test_pos = 1:p.nPos
+                            ave = NaN(p.nSubs,1);
+                            for sub = 1:p.nSubs
+                                ind = data_all(:,1) == sub & data_all(:,3) == tr_pos & data_all(:,2) == tr_ld & data_all(:,4) == test_pos & data_all(:,5) == test_ld;
+                                vplot(vind,tr_pos + 4*(tr_ld-1)) = nanmean(data_all(ind,met));
                                 vind = vind + 1;
-                                
-                                %se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
-                                %errorbar_ez('boxwhisk',j, ave_all(:,train),se,.4,cblue(j,:))
-%                             end
-%                         end
+                            end
+                            %se = nanstd(ave_all(:,train))/sqrt(p.nSubs);
+                            %errorbar_ez('boxwhisk',j, ave_all(:,train),se,.4,cblue(j,:))
+                        end
                     end
                 end
             end
-            assignin('base','vplot',vplot)
-            vs = violinplot(vplot,1:p.nPos*p.nLoads,'ShowData',false,'ShowViolin',true,'LineWidth',1.5,'ViolinColor',carray,'Max',100,'Min',0);
-            
+            vs = violinplot(vplot,1:p.nPos*p.nLoads,'ShowData',false,'ShowViolin',false,'LineWidth',1.5,'ViolinColor',cblue(1:p.nPos,:),'Max',100,'Min',0);
+            assignin('base','vplot',vs)
         end
         ylim([0 100])
         set(gca,'linewidth',1)

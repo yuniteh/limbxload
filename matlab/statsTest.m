@@ -54,3 +54,17 @@ NM.Load = categorical(NM.Load,[1,2,3]);
 mod = fitlme(NM,'RI~Pos+Load+Pos*Load+(1|Sub)')%,'dummyvarcoding','effects')
 anova(mod)
 
+%% biorob
+met = array2table(data_all,'VariableNames',{'Sub','TrLoad','TrPos','Pos','Load','Accuracy'});
+met.TrLoad = categorical(met.TrLoad);
+met.Sub = categorical(met.Sub);
+met.TrPos = categorical(met.TrPos);
+
+mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
+anova(mod)
+
+
+
+
+
+
