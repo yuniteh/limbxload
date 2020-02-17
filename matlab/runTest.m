@@ -54,27 +54,6 @@ for sub = 1:nSubs
     end
 end
 %%
-
-nPos = 4;
-nClass = 7;
-
-f = fieldnames(FS2{1,1,1});
-
-for tr = 1:size(FS2,2)
-    for ld = 1:size(FS2,3)
-        for sub = 1:size(FS2,1)
-            for names = 1:length(f)
-                temp.(f{names})(sub,:,:) = FS2{sub,tr,ld}.(f{names});
-            end
-        end
-        for names = 1:length(f)
-            out.(f{names}){tr,ld} = nanmean(temp.(f{names}),1);
-            out.(f{names}){tr,ld} = reshape(out.(f{names}){tr,ld},size(out.(f{names}){tr,ld},2),size(out.(f{names}){tr,ld},3));
-        end
-    end
-end
-
-%%
 % featAll = calcOffStat(subType);
 
 %%
@@ -90,9 +69,10 @@ f = {'RI','MSA_te','MSA_tr','SI_te','SI_tr'};
 nSubs = size(featAll,1);
 nLoad = size(featAll,3);
 nPos = size(featAll,2);
+nClass = 7;
 
 acc = cell(size(featAll));
-all_met = NaN(nSubs*nLoad*nPos*nLoad,16);
+all_met = NaN(nSubs*nLoad*nPos*nLoad,12);
 ind = 1;
 for ld = 1:nLoad
     for pos = 1:nPos
@@ -102,12 +82,12 @@ for ld = 1:nLoad
                     acc = nanmean(featAll{sub,pos,ld,test_ld}.acc,2);
                     for names = 1:length(f)
                         temp = [featAll{sub,pos,ld,test_ld}.(f{names})(:,1) nanmean(featAll{sub,pos,ld,test_ld}.(f{names})(:,2:end),2)];
-                        evalc([f{names} '= temp']);
+                        evalc([f{names} '= featAll{sub,pos,ld,test_ld}.(f{names})']);
                     end
                 else
                     acc = NaN(size(featAll,2),1);
                     for names = 1:length(f)
-                        evalc([f{names} '= NaN(nPos,2);']);
+                        evalc([f{names} '= NaN(nPos,7);']);
                     end
                 end
                 
@@ -116,9 +96,11 @@ for ld = 1:nLoad
                         MSA_tr = repmat(MSA_tr,nPos,1);
                         SI_tr = repmat(SI_tr,nPos,1);
                     end
-                    all_met(ind,:) = [sub, ld, pos, test_pos, test_ld, acc(test_pos), RI(test_pos,:),MSA_te(test_pos,:), MSA_tr(test_pos,:),...
-                        SI_te(test_pos,:), SI_tr(test_pos,:)];
+                    for dof = 1:size(RI,2)
+                    all_met(ind,:) = [sub, ld, pos, test_pos, test_ld, dof, acc(test_pos), RI(test_pos,dof),MSA_te(test_pos,dof), MSA_tr(test_pos,dof),...
+                        SI_te(test_pos,dof), SI_tr(test_pos,dof)];
                     ind = ind + 1;
+                    end
                 end
             end
         end
@@ -129,9 +111,13 @@ end
 for sub = 1:nSubs
     for ld = 1:nLoad
         for pos = 1:nPos
-            ind = all_met(:,1) == sub & all_met(:,2) == ld & all_met(:,3) == pos;
-            for met = [11 12 15 16]
+            for dof = 1:nClass
+            ind = all_met(:,1) == sub & all_met(:,2) == ld & all_met(:,3) == pos & all_met(:,6) == dof;
+            if sum(ind) > 0
+            for met = [10 12]
                 all_met(ind,met) = mode(all_met(ind,met));
+            end
+            end
             end
         end
     end

@@ -1,7 +1,7 @@
-function [featAll] = calcOffStat(subType)
+function [featAll] = calcOff2Pos(subType)
 
 subAll = loadSubs(subType,1);
-fold = 10;
+fold = 2;
 numLoads = 3;
 numPos = 4;
 
@@ -11,9 +11,11 @@ disp('Calculating offline accuracies')
 featAll = cell(size(subAll.subs,1),2,numLoads);
 newFeat = true;
 
+tr_mat = [1 4;1 3;2 3;3 4];
+
 for subInd = 1:size(subAll.subs,1)
-    w = cell(numPos,numLoads, fold);
-    c = cell(numPos,numLoads, fold);
+    w = cell(4,numLoads, fold);
+    c = cell(4,numLoads, fold);
     
     sub = subAll.subs{subInd};
     path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
@@ -36,36 +38,50 @@ for subInd = 1:size(subAll.subs,1)
         
         % create training and testing indices for feedforward static
         for ld = 1:numLoads
-            for pos = 1:numPos
+            for tr = 1:size(tr_mat,1);
+                pos1 = tr_mat(tr,1);
+                pos2 = tr_mat(tr,2);
                 if sum(params(:,1) == ld + 2) > 0
-                    [train_stat, test_stat] = crossval(params(params(:,1) == ld+2 & params(:,3) == pos,2),fold);
+                    [train_p1, test_p1] = crossval(params(params(:,1) == ld+2 & params(:,3) == pos1,2),fold);
+                    [train_p2, test_p2] = crossval(params(params(:,1) == ld+2 & params(:,3) == pos2,2),fold);
                     
                     % TRAINING USING STATIC FEEDFORWARD DATA
-                    stat_ind = params(:,1) == ld+2 & params(:,3) == pos;     % index for no load, pos 1 feedforward
-                    cur_feat = feat(stat_ind,:);                            % features for no load, pos 1 feedforward
-                    cur_params = params(stat_ind,:);                        % params for no load, pos 1 feedforward
+                    p1_ind = params(:,1) == ld+2 & params(:,3) == pos1;     % index for no load, pos 1 feedforward
+                    p1_feat = feat(p1_ind,:);                            % features for no load, pos 1 feedforward
+                    p1_params = params(p1_ind,:);                        % params for no load, pos 1 feedforward
+                    p2_ind = params(:,1) == ld+2 & params(:,3) == pos2;     % index for no load, pos 1 feedforward
+                    p2_feat = feat(p2_ind,:);                            % features for no load, pos 1 feedforward
+                    p2_params = params(p2_ind,:);                        % params for no load, pos 1 feedforward
                     
                     for test_ld = 1:numLoads
                         if sum(params(:,1) == test_ld+2) > 0
-                            sup_ind = params(:,1) == test_ld+2 & params(:,3) ~= pos;                               % index for no load, all positions except pos 1
+                            sup_ind = params(:,1) == test_ld+2 & params(:,3) ~= pos1 & params(:,3) ~= pos2;                               % index for no load, all positions except pos 1
                             
                             acc = zeros(numPos, numClass);
                             for k_fold = 1:fold
-                                train_feat = cur_feat(train_stat(k_fold,:),:);
-                                train_params = cur_params(train_stat(k_fold,:),:);
-                                if isempty(w{pos,ld,k_fold})
-                                    [w{pos,ld,k_fold},c{pos,ld,k_fold}] = trainLDA(train_feat, train_params(:,2));
+                                train_feat = [p1_feat(train_p1(k_fold,:),:); p2_feat(train_p2(k_fold,:),:)];
+                                train_params = [p1_params(train_p1(k_fold,:),:); p2_params(train_p2(k_fold,:),:)];
+                                if isempty(w{tr,ld,k_fold})
+                                    [w{tr,ld,k_fold},c{tr,ld,k_fold}] = trainLDA(train_feat, train_params(:,2));
                                 end
+                                %                                     assignin('base','w',w)
+                                %                                     assignin('base','c',c)
                                 
-                                test_feat = [cur_feat(test_stat(k_fold,:),:); feat(sup_ind,:)];
-                                test_params = [cur_params(test_stat(k_fold,:),:); params(sup_ind,:)];
+                                
+                                if test_ld == ld
+                                    test_feat = [p1_feat(test_p1(k_fold,:),:); p2_feat(test_p2(k_fold,:),:); feat(sup_ind,:)];
+                                    test_params = [p1_params(test_p1(k_fold,:),:); p2_params(test_p2(k_fold,:),:); params(sup_ind,:)];
+                                else
+                                    test_feat = feat(params(:,1) == test_ld + 2,:);
+                                    test_params = params(params(:,1) == test_ld +2,:);
+                                end
                                 
                                 % record position and class for confusion matrices
                                 class_true = test_params(:,2);
                                 pos_true = test_params(:,3);
                                 
                                 % train and classify
-                                [class_out] = classifyLDA(test_feat,w{pos,ld,k_fold},c{pos,ld,k_fold});
+                                [class_out] = classifyLDA(test_feat,w{tr,ld,k_fold},c{tr,ld,k_fold});
                                 
                                 % combine classification results
                                 for p_ind = 1:numPos
@@ -90,7 +106,7 @@ for subInd = 1:size(subAll.subs,1)
                                 newFeat = false;
                             end
                             
-                            featAll{subInd,pos,ld,test_ld} = featOut;
+                            featAll{subInd,tr,ld,test_ld} = featOut;
                             
                             clearvars class_out class_true pos_true featOut
                             newFeat = true;

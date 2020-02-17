@@ -36,11 +36,11 @@ p.metLabels = [{'Completion Rate (%)'},{'Movement Efficacy (%)'},{'Stopping Effi
 p.loadLabels = [{'0g'},{'400g'},{'600g'}];
 
 %% Scale metrics
-if max(data_all(:,6)) <= 1
+if max(data_all(:,6)) <= 1 && ~strcmp(style,'biorob')
     data_all(:,6) = data_all(:,6).*100;
-%     data_all(:,10) = data_all(:,10).*100;
-%     data_all(:,14) = data_all(:,14).*100;
-%     data_all(:,15) = data_all(:,15).*100;
+    data_all(:,10) = data_all(:,10).*100;
+    data_all(:,14) = data_all(:,14).*100;
+    data_all(:,15) = data_all(:,15).*100;
 end
 
 %% Switch between plot styles
@@ -60,7 +60,7 @@ switch style
         plotFullSimple(data_all,p,subType)
     % offline plots for Biorob
     case 'biorob'
-        plotBiorob(data_all,p,3)
+        plotBiorob(data_all,data_dof,p,2)
 end
 end
 
