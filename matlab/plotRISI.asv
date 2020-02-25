@@ -1,0 +1,49 @@
+figure
+hold all
+
+%%
+subRI = nan(max(out(:,1)),1);
+RI = nan(4,3);
+for pos = 1:4
+    for ld = 1:3
+        for sub = 1:max(out(:,1))
+            ind = out(:,2) == pos & out(:,3) == ld & out(:,1) == sub;
+            subRI(sub) = nanmean(out(ind,5));
+            subSI(sub) = nanmean(out(ind,6));
+        end
+        RI(pos,ld) = nanmean(subRI);
+        SE(pos,ld) = nanstd(subRI)./sum(~isnan(subRI));
+        SI(pos,ld) = nanmean(subSI);
+        SI_se(pos,ld) = nanstd(subSI)./sum(~isnan(subSI));
+    end
+    
+end
+
+%%
+figure
+hold all
+c = flipud(linspecer(5,'blue'));
+c = linspecer(3);
+for ld = 1:3
+    stdshade(RI(:,ld)', SE(:,ld)',.3,c(ld,:))
+end
+
+legend('0g','400g','600g')
+xlabel('Position')
+set(gca,'XTick',1:4);
+set(gca,'XTickLabels',{'P1', 'P2','P3','P4'})
+ylabel('RI')
+
+%%
+figure
+hold all
+c = flipud(linspecer(6,'blue mat'));
+c = linspecer(4);
+for pos = 1:4
+    plot(RI(pos,:), SE(pos,:),.3,c(pos,:),'linewidth',2)
+end
+legend('P1','P2','P3','P4')
+xlabel('Load')
+set(gca,'XTick',1:3);
+set(gca,'XTickLabels',{'0g', '400g','600g'})
+ylabel('RI')
