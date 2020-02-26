@@ -14,19 +14,37 @@
 % 13: sliding window maximum time in target
 % 14: movement efficacy
 
-function dataOut = combineData(data_all,sub_rate)
+function dataOut = combineData(data_all,sub_rate,type)
 disp('Combining data...')
 dataOut = data_all;
-for i = 1:size(sub_rate,1) % sub
-    for j = 1:size(sub_rate,2) % training set
-        for k = 1:size(sub_rate{1,1},2) % load
-            for h = 1:size(sub_rate{1,1},1) % pos
-                if ~isempty(sub_rate{i,j})
-                    ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h;
-                    dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j}(h,k)));
+switch type
+    case 1
+        for i = 1:size(sub_rate,1) % sub
+            for j = 1:size(sub_rate,2) % training set
+                for k = 1:size(sub_rate{1,1},2) % load
+                    for h = 1:size(sub_rate{1,1},1) % pos
+                        if ~isempty(sub_rate{i,j})
+                            ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h;
+                            dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j}(h,k)));
+                        end
+                    end
                 end
             end
         end
-    end
+    case 2
+        for i = 1:size(sub_rate,1) % sub
+            for j = 1:size(sub_rate,2) % training set
+                for k = 1:size(sub_rate,3) % load
+                    for h = 1:size(sub_rate{i,j,k},1) % pos
+                        for l = 1:size(sub_rate{i,j,k},2) % dof
+                            if ~isempty(sub_rate{i,j,k})
+                                ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h & data_all(:,5) == l;
+                                dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j,k}(h,l)));
+                            end
+                        end
+                    end
+                end
+            end
+        end
 end
 end

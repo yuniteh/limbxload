@@ -122,3 +122,9 @@ for sub = 1:nSubs
         end
     end
 end
+
+%%
+[cm_all, acc_all, sub_rate, FS] = calcOffFull(subType);
+data_all = combineData(data_all,sub_rate,2);
+all_met = combineMetAcc(FS,data_all);
+out = combineFeats(all_met,data_all);

@@ -1,10 +1,10 @@
 %% combine features and online results for MEC
-dyn = tr.dyn;
+function out = combineFeats(mets,data_all)
 %%
 data_new = data_all(:,[1 3 4 2 5 6 7 14 10]);
 data_new(:,5) = data_new(:,5) + 1;
 data_new(:,[6 8 9]) = data_new(:,[6 8 9])*100;
-all_new = dyn;
+all_new = mets;
 
 %%
 maxall = size(all_new,2);
@@ -25,5 +25,5 @@ for sub = 1:max(all_new(:,1))
         end
     end
 end
-
-trT.all = array2table(all_new,'VariableNames',{'sub','tr','pos','ld','dof','acc','RI','MSA_te','MSA_tr','SI_te','SI_tr','comp','time','move','stop'});
+out  = array2table(all_new,'VariableNames',{'sub','tr','pos','ld','dof','acc','RI','MSA_te','MSA_tr','SI_te','SI_tr','comp','time','move','stop'});
+end
