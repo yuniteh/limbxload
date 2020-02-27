@@ -14,12 +14,14 @@ nPos = max(data.pos);
 nLd = max(data.ld);
 nDOF = max(data.dof);
 metNames = {'acc','RI','MSA_te','MSA_tr','SI_te','SI_tr','comp','time','move','stop'};
-
+posNames = {'P1','P2','P3','P4'};
+dofNames = {'NM','HO','HC','WP','WS','WF','WE'};
 switch type
     case 'matrix'
         %% matrix of features
         figure
-        [ax]=tight_subplot(3,nLd,[.03 .02],[.1 .1],[.09 0.03]);
+        nMet = 3;
+        [ax]=tight_subplot(nMet,nLd,[.03 .02],[.1 .1],[.09 0.03]);
         
         y_ind = 1;
         for met_i = [2 1 9]
@@ -37,16 +39,31 @@ switch type
                                 ind = data.tr == train & data.pos == pos & data.sub == sub & data.ld == ld & data.dof == dof;
                                 temp(sub) = nanmean(data.(met)(ind));
                             end
-                            if met_i ~= 2
-                                temp = 100-temp;
-                            end
                             mat(pos,dof) = nanmean(temp);
                             
                         end
                     end
-                    plotMat(mat,'xticks',{'NM','HO','HC','WP','WS','WF','WE'},'yticks',...
-                        {'P1','P2','P3','P4'},'colors','blue','range',[0 maxMet],'xlabel',...
-                        ' ','ylabel',' ')
+                    if ld == 1
+                        if y_ind == nMet
+                            plotMat(mat,'xticks',dofNames,'yticks',...
+                                posNames,'colors','blue','range',[0 maxMet],'xlabel',...
+                                ' ','ylabel',' ')
+                        else
+                            plotMat(mat,'xticks',' ','yticks',...
+                                posNames,'colors','blue','range',[0 maxMet],'xlabel',...
+                                ' ','ylabel',' ')
+                        end
+                    else
+                        if y_ind == nMet
+                            plotMat(mat,'xticks',dofNames,'yticks',...
+                                ' ','colors','blue','range',[0 maxMet],'xlabel',...
+                                ' ','ylabel',' ')
+                        else
+                            plotMat(mat,'xticks',' ','yticks',...
+                                ' ','colors','blue','range',[0 maxMet],'xlabel',...
+                                ' ','ylabel',' ')
+                        end
+                    end
                     fig_ind = fig_ind + 1;
                     
                 end
@@ -71,7 +88,7 @@ switch type
             for sub = 1:nSub
                 met1_all = [];
                 met2_all = [];
-%                 subplot(1,nSub,sub)
+                %                 subplot(1,nSub,sub)
                 for ld = 1:nLd
                     for pos = 1:nPos
                         
@@ -82,7 +99,7 @@ switch type
                     end
                 end
                 plot(met1_all,met2_all-nanmean(met2_all),'.','Markersize',18,'color',c(sub,:))
-%                 ylim([0 100])
+                %                 ylim([0 100])
             end
         end
         

@@ -23,6 +23,7 @@ end
 % initialize offline accuracy matrix
 sub_rate = cell(size(subAll.subs,1),2);
 featAll = cell(size(subAll.subs,1),2,numLoads);
+
 newFeat = true;
 
 for subInd = 1:size(subAll.subs,1)
