@@ -21,14 +21,11 @@ for i = 1:length(acc_all)
 end
 
 % initialize offline accuracy matrix
-sub_rate = cell(size(subAll.subs,1),2);
+sub_rate = cell(size(subAll.subs,1),2,numLoads);
 featAll = cell(size(subAll.subs,1),2,numLoads);
-
 newFeat = true;
 
 for subInd = 1:size(subAll.subs,1)
-    sub_rate{subInd,1} = NaN(numPos,numLoads);
-    sub_rate{subInd,2} = NaN(numPos,numLoads);
     w = cell(numTr, fold);
     c = cell(numTr, fold);
     train_feat = w;
@@ -156,12 +153,19 @@ for subInd = 1:size(subAll.subs,1)
                     
                     % COMBINING RESULTS ACROSS SUBJECTS
                     for j = 1:max(params(:,3))
-                        for k = 1:fold
-                            pos_ind = pos(:,k) == j;
-                            count = sum(class_out(pos_ind,k) == class_true(pos_ind,k));
-                            acc_all{tr_type,1}(te_type - 2,j) = acc_all{tr_type,1}(te_type-2,j) + count;
-                            acc_all{tr_type,2}(te_type - 2,j) = acc_all{tr_type,2}(te_type-2,j) + sum(pos_ind);
-                            sub_rate{subInd,tr_type}(j,te_type - 2) = count/sum(pos_ind);
+                        for dof = 1:max(params(:,2))
+                            tot_ind = 0;
+                            tot_count = 0;
+                            for k = 1:fold
+                                pos_ind = pos(:,k) == j & class_true(:,k) == dof;
+                                tot_ind = tot_ind + sum(pos_ind);
+                                count = sum(class_out(pos_ind,k) == class_true(pos_ind,k));
+                                tot_count = tot_count + count;
+                                acc_all{tr_type,1}(te_type - 2,j) = acc_all{tr_type,1}(te_type-2,j) + count;
+                                acc_all{tr_type,2}(te_type - 2,j) = acc_all{tr_type,2}(te_type-2,j) + sum(pos_ind);
+                                
+                            end
+                            sub_rate{subInd,tr_type,te_type - 2}(j,dof) = tot_count/tot_ind;
                         end
                     end
                     % combine feats
