@@ -181,9 +181,9 @@ else
             train_feat = train_data(train_data(:,2) == cl,4:end);
             
             test_cen = mean(test_feat);
-            test_ax = 2.*std(test_data(test_data(:,3) == pos,4:end));
+            test_ax = 2.*std(test_feat);
             train_cen = mean(train_feat);
-            train_ax = 2.*std(train_data(:,4:end));
+            train_ax = 2.*std(train_feat);
             
             RI(pos,cl) = modmahal(test_feat,train_feat);
             MSA_tr(cl) = geomean(train_ax);

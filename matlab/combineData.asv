@@ -39,14 +39,13 @@ switch type
                     for h = 1:size(sub_rate{i,j,k},1) % pos
                         for l = 1:size(sub_rate{i,j,k},2) % dof
                             if ~isempty(sub_rate{i,j,k})
-                                ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h & data_all(:,5) == l-1;
-                                dataOff = nanmean(nanmean(sub_rate{i,j,k}(h,l)));
+                                ind = data_all(:,1) == i & data_all(:,3) == j & data_all(:,2) == k & data_all(:,4) == h & data_all(:,5) == l;
+                                dataOut(ind,15) = nanmean(nanmean(sub_rate{i,j,k}(h,l)));
                                 if sum(ind) > 0
-                                    dataOn = data_all(ind,6:14);
+                                    dataOn = data_all(ind,6:end-1);
                                 else
-                                    dataOn = nan(1,9);
-                                end
-                                dataOut = [dataOut;i,k,j,h,l,dataOn,dataOff];
+                                    dataOn = nan(1,
+                                dataOut = [dataOut;i,k,j,h,l
                             end
                         end
                     end

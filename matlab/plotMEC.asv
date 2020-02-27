@@ -17,26 +17,28 @@ metNames = {'acc','RI','MSA_te','MSA_tr','SI_te','SI_tr','comp','time','move','s
 
 switch type
     case 'matrix'
-        %% Individual testing condition results for given training condition
+        %% matrix of features
         figure
-        %         [ax]=tight_subplot(1,nLd,[.03 .02],[.1 .1],[.09 0.03]);
-        fig_ind = 1;
+        [ax]=tight_subplot(3,nLd,[.03 .02],[.1 .1],[.09 0.03]);
+        
         y_ind = 1;
-        for met_i = 2
+        for met_i = [2 1 9]
             met = metNames{met_i};
             maxMet = max(data.(met));
-            disp(maxMet)
-            for train = 2
+            fig_ind = 1;
+            for train = 1 
                 for ld = 1:nLd
-                    %                     axes(ax(fig_ind));
-                    hold all
+                    axes(ax(fig_ind + (y_ind-1)*nLd));
                     mat = zeros(nPos,nDOF);
                     for pos = 1:nPos
                         for dof = 1:nDOF
                             temp = nan(nSub,1);
                             for sub = 1:nSub
                                 ind = data.tr == train & data.pos == pos & data.sub == sub & data.ld == ld & data.dof == dof;
-                                temp(sub) = nanmean(data.(met)(ind,:));
+                                temp(sub) = nanmean(data.(met)(ind));
+                            end
+                            if met_i ~= 2
+                                temp = 100-temp;
                             end
                             mat(pos,dof) = nanmean(temp);
                             
@@ -46,9 +48,32 @@ switch type
                         {'P1','P2','P3','P4'},'colors','blue','range',[0 maxMet],'xlabel',...
                         ' ','ylabel',' ')
                     fig_ind = fig_ind + 1;
-                    assignin('base','
+                    
                 end
+                
             end
             y_ind = y_ind + 1;
         end
+    case 'corr'
+        %% correlation of features
+%         figure
+        met1 = 1;
+        met2 = 7;
+        met1 = metNames{met1};
+        met2 = metNames{met2};
+        hold all
+        met1_all = [];
+        met2_all = [];
+        for train = 1
+            for ld = 1:nLd
+                for pos = 1:nPos
+                    for sub = 1:nSub
+                        ind = data.tr == train & data.pos == pos & data.sub == sub & data.ld == ld;
+                        met1_all = [met1_all; data.(met1)(ind & data.dof == 1)];
+                        met2_all = [met2_all; nanmean(data.(met2)(ind))];
+                    end
+                end
+            end
+        end
+        plot(met1_all,met2_all,'.')
 end
