@@ -64,20 +64,18 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.ab;
+out = data.tr;
 tr_type = 1;
 metList = {'comp','time','move','stop'};
 out = out(out.tr == tr_type,:);
 %%
 out.pos = categorical(out.pos,[1,2,3,4]);
-% out.tr = categorical(out.tr,[1,2]);
 out.sub = categorical(out.sub);
 out.ld = categorical(out.ld,[1,2,3]);
 
 for m = 1:4
     met = metList{m};
     mod{m} = fitlme(out,[met '~ pos + ld + pos*ld + (1|sub)'],'dummyvarcoding','effects');
-    disp(met)
     anova(mod{m})
 end
 %%
@@ -95,7 +93,7 @@ for i = 1:length(posc)
     end
     hi(posc(i,1)) = hi(posc(i,1)) + 1;
     for m = 1:4
-        posp(i,m) = coefTest(mod{m},hi);
+        posp(m,i) = coefTest(mod{m},hi);
     end
 end
 for i = 1:length(ldc)
@@ -106,15 +104,7 @@ for i = 1:length(ldc)
         hi(ldc(i,2)) = -1;
     end
     hi(ldc(i,1)) = hi(ldc(i,1)) + 1;
-    for m = 1:4
-        ldp(i,m) = coefTest(mod{m},hi);
-    end
+    for m = 1
+    ldp(i) = coefTest(mod,hi);
 end
-
-%%
-testmod = fitlme(out,['comp ~ pos + ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml')
-anova(testmod)
-%%
-[p,~,stats] = anovan(out.comp,{out.pos,out.ld,out.sub},'varnames',{'pos','ld','sub'},...
-    'model',[1 0 0; 0 1 0;0 0 1],'random',3);
 
