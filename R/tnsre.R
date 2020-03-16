@@ -4,7 +4,7 @@ library(emmeans)
 library(pbkrtest)
 
 dat <- read.csv("Z:/Lab Member Folders/Yuni Teh/projects/limbxload/matlab/test.csv")
-met <- dat$stop
+met <- dat$comp
 
 dat$pos <- factor(dat$pos)
 dat$sub <- factor(dat$sub)
@@ -18,7 +18,7 @@ mod <- lmer(met~pos+ld+pos*ld+(1|sub),data = dat)
 print(summary(mod))
 print(anova(mod))
 
-emm <- emmeans(mod,"ld")
+emm <- emmeans(mod,"pos")
 print(contrast(emm))
 print(pairs(emm))
 

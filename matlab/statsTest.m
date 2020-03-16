@@ -64,10 +64,10 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.tr;
+out = data.ab;
 tr_type = 1;
 metList = {'comp','time','move','stop'};
-out = out(out.tr == tr_type,:);
+out = out(out.tr == tr_type & out.dof ~= 1,:);
 %%
 out.pos = categorical(out.pos,[1,2,3,4]);
 % out.tr = categorical(out.tr,[1,2]);
@@ -115,13 +115,28 @@ end
 testmod = fitlme(out,['comp ~ pos + ld + pos*ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml');
 anova(testmod,'DFmethod','satterthwaite')
 %%
+% out = old(old.dof ~= 1,:);
 for m = 1:4
     met = out.(metList{m});
     [p,~,stats] = anovan(met,{out.pos,out.ld,out.sub},'varnames',{'pos','ld','sub'},...
-    'model',[1 0 0; 0 1 0;1 1 0;0 0 1],'random',3);
+    'model',[1 0 0; 0 1 0; 0 0 1],'random',3);
     temp = multcompare(stats);
     posp(:,m) = temp(:,end);
     temp = multcompare(stats,'dimension',2);
     ldp(:,m) = temp(:,end);
 end
 
+%%
+new = [];
+for subI = 1:14
+    for posI = 1:4
+        for ldI = 1:3
+            for dofI = 1:6
+                new = [new; subI posI ldI dofI static.Complete(static.Sub == subI &...
+                    static.Pos == posI & static.Load == ldI & static.DOF == dofI,:) out.comp(...
+                    out.sub == subI & out.pos == posI & out.ld == ldI & out.dof == dofI+1,:)];
+                
+            end
+        end
+    end
+end
