@@ -64,7 +64,7 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.ab;
+out = data.tr;
 tr_type = 1;
 metList = {'comp','time','move','stop'};
 out = out(out.tr == tr_type & out.dof ~= 1,:);
@@ -74,6 +74,7 @@ out.pos = categorical(out.pos,[1,2,3,4]);
 out.sub = categorical(out.sub);
 out.ld = categorical(out.ld,[1,2,3]);
 
+%%
 for m = 1:4
     met = metList{m};
     mod{m} = fitlme(out,[met '~ pos + ld + pos*ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml');
