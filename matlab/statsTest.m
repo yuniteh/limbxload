@@ -72,7 +72,7 @@ out = out(out.tr == tr_type & out.dof ~= 1,:);
 out.pos = categorical(out.pos,[1,2,3,4]);
 % out.tr = categorical(out.tr,[1,2]);
 out.sub = categorical(out.sub);
-out.ld = categorical(out.ld,[1,2,3]);
+out.ld = categorical(out.ld,[3,2,1]);
 
 %%
 for m = 1:4

@@ -1,0 +1,80 @@
+function plotTNSRE(data,subType)
+%% set colormaps
+cblue = linspecer(5,'blue');
+cblue = flipud(cblue);
+cred = linspecer(7,'red');
+cred = flipud(cred);
+cgreen = linspecer(4,'green');
+cgreen = flipud(cgreen);
+metList = {'comp','move','stop','time'};
+nLd = max(data.ld);
+nPos = max(data.pos);
+nSub = max(data.sub);
+
+%% Plot static data with points
+%marks = [{'o'},{'+'},{'*'},{'d'},{'s'},{'^'},{'p'}];
+xvals = ones(p.nSubs,1);
+normval = ones(p.nSubs,1);
+figure
+[ax]=tight_subplot(4,3,[.05 .06],[.07 .03],[.09 0.04]);
+
+fig_ind = 1;
+y_ind = 1;
+for metI = 1:4
+    met = metList{metI};
+    for ld = 1:nLd
+        axes(ax(fig_ind));
+        hold all
+        for pos = 1:nPos
+            ave = zeros(nSub,1);
+            for sub = 1:nSub
+                ave(sub) = nanmean(data.(met)(data.sub == sub & data.pos == pos & data.ld == ld & data.tr == 1,:));
+                if j == 1
+                    normval(sub) = ave;
+                end
+            end
+            minx = 0.4;
+            maxx = p.nPos+.6;
+            xlim([minx maxx])
+            for sub = 1:p.nSubs
+                %plot((2*j)-1,ave_all(sub,train)-normval(sub),'o','Color','k','MarkerSize',8,'MarkerFaceColor',cblue(j+1,:))
+            end
+            if figtype == 1
+                errorbar_ez('boxwhisk',j, ave_all(:,train),0,.4,cblue(j,:))
+                miny = 0;
+                maxy = 1;
+            elseif j > 1
+                plot([minx maxx],[0 0],'k-','LineWidth',1)
+                se = nanstd(ave_all(:,train)-normval)/sqrt(p.nSubs);
+                errorbar_ez('bar',j, nanmean(ave_all(:,train)-normval,1),se,.4,cblue(j,:))
+                miny = -1;
+                maxy = 1;
+            end
+        end
+        
+        
+        if met ~= 7
+            ylim([miny*100 maxy*100])
+        else
+            ylim([miny*20 maxy*20])
+        end
+        
+        set(gca,'XTick',[])
+        if load > 3
+            set(gca,'YTick',[])
+        else
+            ylabel(p.metLabels{y_ind})
+        end
+        if figtype == 2
+            set(gca,'XTick',1:p.nPos)
+            set(gca,'XTickLabels',[{'P1'} {'P2'} {'P3'} {'P4'}])
+        end
+        set(gca,'linewidth',1)
+        fig_ind = fig_ind + 1;
+    end
+    
+    y_ind = y_ind + 1;
+end
+
+
+end
