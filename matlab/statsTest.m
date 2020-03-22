@@ -64,11 +64,11 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.tr;
-tr_type = 1;
-metList = {'comp','move','stop','time'};
+out = data.ab;
+tr_type = 2;
+metList = {'comp','time','move','stop'};
 out = out(out.tr == tr_type & out.dof ~= 1,:);
-out = out(out.dof ~= 1,:);
+% out = out(out.dof ~= 1,:);
 
 %%
 out.DF = out.sub;
@@ -151,11 +151,11 @@ ldp = zeros(length(ldc),4);
 for m = 1:4
     met = out.(metList{m});
     [p,~,stats] = anovan(met,{out.pos,out.ld,out.sub},'varnames',{'pos','ld','sub'},...
-    'model',[1 0 0; 0 0 1],'random',3,'display','off');
+    'model',[1 0 0; 0 1 0;0 0 1],'random',3,'display','off');
     temp = multcompare(stats);
     posp(:,m) = temp(:,end);
-%     temp = multcompare(stats,'dimension',2);
-%     ldp(:,m) = temp(:,end);
+    temp = multcompare(stats,'dimension',2);
+    ldp(:,m) = temp(:,end);
 end
 
 %%

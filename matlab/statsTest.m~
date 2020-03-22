@@ -64,11 +64,11 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.tr;
+out = data.ab;
 tr_type = 1;
-metList = {'comp','move','stop','time'};
+metList = {'comp','stop','move','time'};
 out = out(out.tr == tr_type & out.dof ~= 1,:);
-out = out(out.dof ~= 1,:);
+% out = out(out.dof ~= 1,:);
 
 %%
 out.DF = out.sub;
@@ -84,11 +84,16 @@ out.ld = categorical(out.ld,[1,2,3]);
 out.DF = categorical(out.DF);
 
 %%
-mod = fitlme(out,[met '~pos + ld + tr + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects')
+mod = fitlme(out,[met '~pos + ld + tr + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
 anova(mod)
 
 %%
-mod = fitlme(out,[met '~pos + ld + tr + DF*pos + DF*ld + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects')
+mod = fitlme(out,[met '~pos + ld + tr + DF*pos + DF*ld + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
+anova(mod)
+
+
+%%
+mod = fitlme(out,[met '~pos*tr + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
 anova(mod)
 
 %%
