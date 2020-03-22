@@ -122,8 +122,10 @@ switch type
             end
             if strcmp(met,'time')
                 ylim([0 20])
+%                 set(gca,'YTick',0:25:100)
             else
                 ylim([0 100])
+                set(gca,'YTick',0:25:100)
             end
             set(gca,'XTick',1:nPos)
             if y_ind == 4
@@ -165,6 +167,7 @@ switch type
             end
             if strcmp(met,'time')
                 ylim([0 20])
+%                 set(gca,'YTick',0:25:100)
             else
                 ylim([0 100])
                 set(gca,'YTick',0:25:100)
