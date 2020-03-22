@@ -84,16 +84,11 @@ out.ld = categorical(out.ld,[1,2,3]);
 out.DF = categorical(out.DF);
 
 %%
-mod = fitlme(out,[met '~pos + ld + tr + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
+mod = fitlme(out,[met '~pos + ld + tr + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects')
 anova(mod)
 
 %%
-mod = fitlme(out,[met '~pos + ld + tr + DF*pos + DF*ld + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
-anova(mod)
-
-
-%%
-mod = fitlme(out,[met '~pos*tr + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects');
+mod = fitlme(out,[met '~pos + ld + tr + DF*pos + DF*ld + pos*tr + pos*ld + ld*tr + pos*tr*ld + (1|sub)'],'dummyvarcoding','effects')
 anova(mod)
 
 %%
