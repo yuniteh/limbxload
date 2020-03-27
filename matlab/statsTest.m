@@ -64,10 +64,10 @@ mod = fitlme(met,'Accuracy ~ TrLoad+TrPos+(1|Sub)','dummyvarcoding','effects')
 anova(mod)
 
 %%
-out = data.ab;
-tr_type = 2;
+out = data.tr;
+tr_type = 1;
 metList = {'comp','time','move','stop'};
-out = out(out.tr == tr_type & out.dof ~= 1,:);
+out = out(out.tr == tr_type & out.dof ~= 1 & out.sub < 3,:);
 % out = out(out.dof ~= 1,:);
 
 %%
@@ -101,11 +101,19 @@ mod = fitlme(out,[met '~pos + ld + pos*ld + (1|sub)'],'dummyvarcoding','effects'
 anova(mod)
 
 %%
+clear p;
 for m = 1:4
     met = metList{m};
-    mod{m} = fitlme(out,[met '~ pos + ld + pos*ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml');
+    mod{m} = fitlme(out,[met '~ pos*ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml');
     disp(met)
-    anova(mod{m},'DFmethod','satterthwaite')
+    an_out = anova(mod{m},'DFmethod','satterthwaite')
+    temp = dataset2table(an_out);
+    p(:,m) = temp.pValue(2:end);
+end
+
+cor = nan(size(p));
+for i = 1:size(p,1)
+[cor(i,:), h] = bonf_holm(p(i,:),0.05);
 end
 
 %%
@@ -158,6 +166,16 @@ for m = 1:4
     ldp(:,m) = temp(:,end);
 end
 
+cor_p = nan(size(posp));
+h = cor_p;
+for i = 1:size(posp,1)
+[cor_p(i,:), h(i,:)] = bonf_holm(posp(i,:),0.05);
+end
+cor = nan(size(ldp));
+h = cor;
+for i = 1:size(ldp,1)
+[cor(i,:), h(i,:)] = bonf_holm(ldp(i,:),0.05);
+end
 %%
 new = [];
 for subI = 1:14
