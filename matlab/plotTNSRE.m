@@ -362,53 +362,64 @@ switch type
         %         c(1,:,:) = cblue(3:3+4,:);
         %         c(2,:,:) = cgreen(end-4:end,:);
         
-        xint = .3:.3:.3*nPos;
-        xint = [xint xint+(.3*nPos+.2)];
-        se = zeros(nPos,2);
-        aves = zeros(nPos,2);
+        xint1 = .3:.3:.3*nPos;
+        xmid = max(xint1)+.25;
+        xint = [xint1 xint1+(.3*nPos+.2)];
+        xmid2 = max(xint)+.25;
+        xint = [xint xint1+2*(.3*nPos+.2)];
+        
+        xmax = max(xint)+.3;
+
+        se = zeros(nPos,3);
+        aves = zeros(nPos,3);
         fig_ind = 1;
         y_ind = 1;
+        ctrain = 1;
         for metI = 1:4
             met = metList{metI};
             axes(ax(fig_ind));
             hold all
             for pos = 1:nPos
-                for train = 1:2
-                    if train == 1
-                        maxi = 2;
-                        nSubt = 2;
+                for train = 1:3
+                    if train == 3
+                        ctrain = 2;
+                        temp = data.sub(data.tr2 == train);
                     else
-                        maxi = 1;
-                        nSubt = nSub;
+                        ctrain = 1;
+                        temp = data.sub2(data.tr2 == train);
                     end
-                    for i = 1:maxi
-                        ave_all = zeros(nSubt,2);
-                        for sub = 1:nSubt
-                            ind = data.tr == train & data.pos == pos & data.sub == sub;
-                            ave = nanmean(data.(met)(ind,:));
-                            ave_all(sub,train) = ave;
+                    nSub = length(unique(temp));
+                    ave_all = zeros(nSub,2);
+                    for sub = 1:nSub
+                        if train == 3
+                            ind = data.tr2 == train & data.pos == pos & data.sub == sub;
+                        else
+                            ind = data.tr2 == train & data.pos == pos & data.sub2 == sub;
                         end
-                        se(pos,train) = nanstd(ave_all(:,train))/sqrt(sum(~isnan(ave_all(:,train))));
-                        aves(pos,train) = nanmean(ave_all(:,train));
-                        errorbar_ez('bar',xint((train-1)*nPos+pos),aves(pos,train),se(pos,train),.15,c(train,:))
+                        ave = nanmean(data.(met)(ind,:));
+                        ave_all(sub,train) = ave;
                     end
+                    se(pos,train) = nanstd(ave_all(:,train))/sqrt(sum(~isnan(ave_all(:,train))));
+                    aves(pos,train) = nanmean(ave_all(:,train));
+                    errorbar_ez('bar',xint((train-1)*nPos+pos),aves(pos,train),se(pos,train),.15,c(ctrain,:))
                 end
             end
-            xmax = max(xint)+.3;
             
             if strcmp(met,'time')
                 ylim([0 20])
                 set(gca,'YTick',0:5:20)
                 
-                plot([xmax/2 xmax/2],[0 20],'k--','Linewidth',1)
+                plot([xmid xmid],[0 20],'k--','Linewidth',1)
+                plot([xmid2 xmid2],[0 20],'k--','Linewidth',1)
             else
                 ylim([0 100])
                 set(gca,'YTick',0:25:100)
-                plot([xmax/2 xmax/2],[0 100],'k--','Linewidth',1)
+                plot([xmid xmid],[0 100],'k--','Linewidth',1)
+                plot([xmid2 xmid2],[0 100],'k--','Linewidth',1)
             end
             set(gca,'XTick',xint)
             if y_ind == 4
-                set(gca,'XTickLabels',['P1'; 'P2';'P3';'P4';'P1'; 'P2';'P3';'P4'])
+                set(gca,'XTickLabels',['P1'; 'P2';'P3';'P4';'P1'; 'P2';'P3';'P4';'P1'; 'P2';'P3';'P4'])
                 xlabel('Limb Position')
             else
                 set(gca,'XTickLabels',[])
@@ -427,11 +438,13 @@ switch type
             end
         end
         
-        xint = .3:.3:.3*nLd;
-        xint = [xint xint+(.3*nLd+.2)];
+        xint = .15:.2:.2*nLd;
+        xint = [xint xint+(.2*nLd+.1)];
+        xmax = max(xint)+.15;
         se = zeros(nLd,2);
         aves = zeros(nLd,2);
         fig_ind = 2;
+        nSub = max(data.sub);
         for metI = 1:4
             met = metList{metI};
             axes(ax(fig_ind));
@@ -446,10 +459,10 @@ switch type
                     end
                     se(ld,train) = nanstd(ave_all(:,train))/sqrt(sum(~isnan(ave_all(:,train))));
                     aves(ld,train) = nanmean(ave_all(:,train));
-                    errorbar_ez('bar',xint((train-1)*nLd+ld),aves(ld,train),se(ld,train),.15,c(train,:))
+                    errorbar_ez('bar',xint((train-1)*nLd+ld),aves(ld,train),se(ld,train),.1,c(train,:))
                 end
             end
-            xmax = max(xint)+.3;
+            
             
             if strcmp(met,'time')
                 ylim([0 20])
