@@ -1,7 +1,7 @@
-out = data.ab;
-tr_type = 0;
-metList = {'comp','time','move','stop'};
-out = out(out.tr ~= tr_type & out.dof ~= 1,:);
+out = data.tr;
+tr_type = 2;
+metList = {'comp','move','stop','time'};
+out = out(out.tr ~= tr_type & out.dof ~= 1 & out.sub >= 3,:);
 
 %%
 out.DF = out.sub;
@@ -16,7 +16,7 @@ out.ld = categorical(out.ld,[1,2,3]);
 out.DF = categorical(out.DF);
 
 %%
-clear p;
+clear p f;
 for m = 1:4
     met = metList{m};
     mod{m} = fitlme(out,[met '~ pos+ld + (1|sub)'],'dummyvarcoding','effects','fitmethod','reml');
@@ -24,6 +24,7 @@ for m = 1:4
     an_out = anova(mod{m},'DFmethod','satterthwaite')
     temp = dataset2table(an_out);
     p(:,m) = temp.pValue(2:end);
+    f(:,m) = temp.FStat(2:end);
 end
 
 cor = nan(size(p));
@@ -59,13 +60,13 @@ for i = 1:size(ldp,1)
 end
 
 %%
-out = data.ab;
-stat = out(out.tr == 1 & out.pos == 1 & out.dof ~= 1,:);
+out = data.tr;
+stat = out(out.tr == 1 & out.pos == 1 & out.dof ~= 1 & out.sub < 3,:);
 p = nan(4,4);
 for m = 1:4
     met = metList{m};
     for pos = 1:4
-        dyn = out(out.tr == 2 & out.pos == pos & out.dof ~= 1,:);
+        dyn = out(out.tr == 2 & out.pos == pos & out.dof ~= 1 & out.sub < 3,:);
         
         stata = nan(max(stat.sub),1);
         dyna = stata;
@@ -73,6 +74,11 @@ for m = 1:4
             stata(sub) = nanmean(stat.(met)(stat.sub == sub));
             dyna(sub) = nanmean(dyn.(met)(dyn.sub == sub));
         end
-        [h,p(m,pos)] = ttest(stata,dyna);
+        [h,p(pos,m)] = ttest(stata,dyna);
     end
+end
+
+cor_t = nan(size(p));
+for i = 1:size(p,1)
+    [cor_t(i,:), h] = bonf_holm(p(i,:),0.05);
 end
