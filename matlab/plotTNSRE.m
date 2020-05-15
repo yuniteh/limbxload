@@ -47,8 +47,8 @@ switch type
                         minx = 0.4;
                         maxx = nPos+.6;
                         xlim([minx maxx])
-                        errorbar_ez('boxwhisk',pos,ave,0,.4,c(pos,:))
-                        %                         errorbar_ez('bar',pos,nanmean(ave),nanstd(ave)./sqrt(sum(~isnan(ave))),.4,c(pos,:))
+%                         errorbar_ez('boxwhisk',pos,ave,0,.4,c(pos,:))
+                        errorbar_ez('box',pos,nanmean(ave),nanstd(ave)./sqrt(sum(~isnan(ave))),.4,c(pos,:))
                     end
                     
                     if strcmp(met,'time')

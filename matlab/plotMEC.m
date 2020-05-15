@@ -8,7 +8,7 @@ cgreen = linspecer(4,'green');
 cgreen = flipud(cgreen);
 
 %% initialize variables
-if ~isfield(data,'ab')
+if ~isfield(data,'ab')      % if data does not include ab and tr subs
     nSub = max(data.sub);
     nTrain = max(data.tr);
     nPos = max(data.pos);
@@ -480,8 +480,8 @@ switch type
                 end
             end
         end
-    case 'corrmet3'
-        %% correlation of features
+    %% nice plots with correlation coeff and CIs
+    case 'corrmet3'             
         met1 = 'acc';
         met2 = 'move';
         met2_label = {'Completion\newlineRate (%)','Completion\newlineTime (s)','Movement\newlineEfficacy (%)','Stopping\newlineEfficacy (%)'};
