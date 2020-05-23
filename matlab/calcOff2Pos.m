@@ -38,7 +38,7 @@ for subInd = 1:size(subAll.subs,1)
         
         % create training and testing indices for feedforward static
         for ld = 1:numLoads
-            for tr = 1:size(tr_mat,1);
+            for tr = 1:size(tr_mat,1)
                 pos1 = tr_mat(tr,1);
                 pos2 = tr_mat(tr,2);
                 if sum(params(:,1) == ld + 2) > 0
@@ -63,10 +63,7 @@ for subInd = 1:size(subAll.subs,1)
                                 train_params = [p1_params(train_p1(k_fold,:),:); p2_params(train_p2(k_fold,:),:)];
                                 if isempty(w{tr,ld,k_fold})
                                     [w{tr,ld,k_fold},c{tr,ld,k_fold}] = trainLDA(train_feat, train_params(:,2));
-                                end
-                                %                                     assignin('base','w',w)
-                                %                                     assignin('base','c',c)
-                                
+                                end                                
                                 
                                 if test_ld == ld
                                     test_feat = [p1_feat(test_p1(k_fold,:),:); p2_feat(test_p2(k_fold,:),:); feat(sup_ind,:)];

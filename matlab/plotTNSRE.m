@@ -17,6 +17,82 @@ loadLabels = {'0g','400g','600g'};
 
 %% Plot static data with points
 switch type
+    case 'offline'
+        metList = {'acc','RI','SI_te'};
+        metLabels = {'Offline Accuracy (%)','Repeatability', 'Separability'};
+
+        c_a{1} = cblue;
+        c_a{2} = cgreen;
+        max_tr = length(unique(data.tr));
+        for tr_i = 1:max_tr
+            if max_tr == 1
+                tr = data.tr(1);
+            else
+                tr = tr_i;
+            end
+            c = c_a{tr};
+            figure
+            [ax]=tight_subplot(size(metList,2),3,[.03 .02],[.06 .03],[.1 0.01]);
+            
+            fig_ind = 1;
+            y_ind = 1;
+            for metI = 1:size(metList,2)
+                met = metList{metI};
+                for ld = 1:nLd
+                    axes(ax(fig_ind));
+                    hold all
+                    for pos = 1:nPos
+                        ave = nan(nSub,1);
+                        for sub = 1:nSub
+                            ave(sub) = nanmean(data.(met)(data.sub == sub & data.pos == pos & data.ld == ld & data.tr == tr,:));
+                        end
+                        minx = 0.4;
+                        maxx = nPos+.6;
+                        xlim([minx maxx])
+%                         errorbar_ez('boxwhisk',pos,ave,0,.4,c(pos,:))
+                        errorbar_ez('box',pos,nanmean(ave),nanstd(ave)./sqrt(sum(~isnan(ave))),.4,c(pos,:))
+                    end
+                    
+                    if strcmp(met,'acc')
+                        ylim([0 100])
+                        set(gca,'YTick',0:25:100)
+                    elseif strcmp(met,'RI')
+                        ylim([2 11])
+                        set(gca,'YTick',0:2:10)
+                    else
+                        ylim([5 30])
+                        set(gca,'YTick',0:5:30)
+                    end
+                    
+                    
+                    if ld > 1
+                        set(gca,'YTick',[])
+                    else
+                        ylabel(metLabels{metI})
+                    end
+                    set(gca,'linewidth',1)
+                    fig_ind = fig_ind + 1;
+                    if y_ind == 3
+                        set(gca,'XTick',1:nPos)
+                        set(gca,'XTickLabels',['P1'; 'P2';'P3';'P4'])
+                        if ld == 2
+                            xlabel('Limb Position')
+                        end
+                    else
+                        set(gca,'XTick',[])
+                        if y_ind == 1
+                            title(loadLabels{ld})
+                        end
+                    end
+                    
+                end
+                y_ind = y_ind + 1;
+            end
+            if sv == 1
+                filename = input('filename: ','s');
+                exportfig(gcf,['/Volumes/necal/Lab Member folders/Yuni Teh/projects/limbxload/images/figures/' filename])
+            end
+        end
     case 'interaction'
         
         c_a{1} = cblue;
@@ -34,7 +110,7 @@ switch type
             
             fig_ind = 1;
             y_ind = 1;
-            for metI = 1:4
+            for metI = 1:size(metList,2)
                 met = metList{metI};
                 for ld = 1:nLd
                     axes(ax(fig_ind));
