@@ -16,14 +16,13 @@
 
 function dataOut = combineData(data_all,sub_rate,type)
 disp('Combining data...')
+dataOut = data_all;
 switch type
-    %% append offline accuracy to data all
     case 'ave'
-        dataOut = data_all;
-        for sub = 1:size(sub_rate,1)                        % sub
-            for tr = 1:size(sub_rate,2)                     % training set
-                for ld = 1:size(sub_rate{1,1},2)            % load
-                    for pos = 1:size(sub_rate{1,1},1)       % pos
+        for sub = 1:size(sub_rate,1)              % sub
+            for tr = 1:size(sub_rate,2)          % training set
+                for ld = 1:size(sub_rate{1,1},2)         % load
+                    for pos = 1:size(sub_rate{1,1},1)     % pos
                         if ~isempty(sub_rate{sub,tr})
                             ind = data_all(:,1) == sub & data_all(:,3) == tr & data_all(:,2) == ld & data_all(:,4) == pos;
                             dataOut(ind,15) = nanmean(nanmean(sub_rate{sub,tr}(pos,ld)));
@@ -32,15 +31,13 @@ switch type
                 end
             end
         end
-        
-    %% 
-    case 'dof'
+    case dof
         dataOut = [];
-        for sub = 1:size(sub_rate,1)                                    % sub
-            for tr = 1:size(sub_rate,2)                                 % training set
-                for ld = 1:size(sub_rate,3)                             % load
-                    for pos = 1:size(sub_rate{sub,tr,ld},1)             % pos
-                        for dof = 1:size(sub_rate{sub,tr,ld},2)         % dof
+        for sub = 1:size(sub_rate,1)                  % sub
+            for tr = 1:size(sub_rate,2)              % training set
+                for ld = 1:size(sub_rate,3)          % load
+                    for pos = 1:size(sub_rate{sub,tr,ld},1)           % pos
+                        for dof = 1:size(sub_rate{sub,tr,ld},2)       % dof
                             if ~isempty(sub_rate{sub,tr,ld})
                                 ind = data_all(:,1) == sub & data_all(:,3) == tr & data_all(:,2) == ld & data_all(:,4) == pos & data_all(:,5) == dof-1;
                                 dataOff = nanmean(nanmean(sub_rate{sub,tr,ld}(pos,dof)));
