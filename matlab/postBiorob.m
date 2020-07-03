@@ -171,9 +171,11 @@ end
 
 %%
 data = [];
-for sub = 1:size(ave,1)
+for sub = 1:size(tr_rng{1},2)
     for test = 1:3
-        data = [data; sub test ave(sub,test)];
+        if ~isnan(tr_rng{test}(sub))
+            data = [data; sub test tr_rng{test}(sub)];
+        end
     end
 end
 
@@ -188,6 +190,7 @@ out = anova(mod)
 [p,tbl,stats] = anovan(all.acc,{all.test, all.sub},...
     'varnames',{'test','Sub'},'model',[1 0],'random',2);
 
+multcompare(stats)
 %%
 figure
 [ax]=tight_subplot(1,3,[.03 .03],[.3 .1],[.09 0.03]);

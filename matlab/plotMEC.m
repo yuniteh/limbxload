@@ -19,6 +19,7 @@ metNames = {'acc','RI','MSA_te','MSA_tr','SI_te','SI_tr','comp','time','move','s
 posNames = {'P1','P2','P3','P4'};
 dofNames = {'NM','HO','HC','WP','WS','WF','WE'};
 switch type
+    %% plot confusion matrices for feature space metrics, input = data
     case 'matrix'
         ab = data.ab;
         tr = data.tr;
@@ -35,10 +36,12 @@ switch type
         [ax_tr] = tight_subplot(nMet,nLd,[.03 .02],[.1 .1],[.09 0.03]);
         
         y_ind = 1;
+        % loop through metrics
         for met_i = [2 5 3]
             met = metNames{met_i};
             
-            for train = 2
+            % loop through training method
+            for train = 1:2
                 mat_ab = nan(nLd,nPos,nDOF);
                 mat_tr = mat_ab;
                 for ld = 1:nLd
@@ -47,6 +50,7 @@ switch type
                             temp_ab = nan(abSub,1);
                             temp_tr = nan(trSub,1);
                             for sub = 1:abSub
+                                % indices for current training method, position, subject, load, and DOF
                                 ind_ab = ab.tr == train & ab.pos == pos & ab.sub == sub & ab.ld == ld & ab.dof == dof;
                                 temp_ab(sub) = nanmean(ab.(met)(ind_ab));
                             end
@@ -62,6 +66,7 @@ switch type
                 end
                 fig_ind = 1;
                 for ld = 1:nLd
+                    % get max values for color gradient scale
                     matabLd = squeeze(mat_ab(ld,:,:));
                     mattrLd = squeeze(mat_tr(ld,:,:));
                     maxMet = max([max(mat_ab(:)) max(mat_tr(:))]);
@@ -90,12 +95,11 @@ switch type
                     plotMat(mattrLd,'xticks',dofLabel,'yticks',posLabel,'colors','blue',...
                         'range',[0 maxMet],'xlabel',' ','ylabel',yLabel)
                     fig_ind = fig_ind + 1;
-                    
                 end
-                
             end
             y_ind = y_ind + 1;
         end
+    %% plot feature metrics as bars for each condition, input = data
     case 'bars'
         ab = data.ab;
         tr = data.tr;
@@ -120,10 +124,11 @@ switch type
                 for ld = 1:nLd
                     for pos = 1:nPos
                         for sub = 1:abSub
-                            
                             ind_ab = ab.tr == train & ab.pos == pos & ab.sub == sub & ab.ld == ld;
                             mat_ab(ld,pos,sub) = nanmean(ab.(met)(ind_ab));
+                            
                             if strcmp(met,'RI')
+                                % get repeatability of only no movement
                                 mat_ab(ld,pos,sub) = nanmean(ab.(met)(ind_ab & ab.dof == 1));
                                 %                                 mat_ab(ld,pos,sub) = 1./mat_ab(ld,pos,sub);
                             end
@@ -139,8 +144,6 @@ switch type
                     end
                 end
                 fig_ind = 1;
-                assignin('base','matab',mat_ab)
-                assignin('base','mattr',mat_tr)
                 for ld = 1:nLd
                     matabLd = squeeze(mat_ab(ld,:,:));
                     mattrLd = squeeze(mat_tr(ld,:,:));
@@ -213,8 +216,8 @@ switch type
             end
             y_ind = y_ind + 1;
         end
+    %% plot correlation b/w two features w/o averaging, input = data.ab or data.tr
     case 'corr'
-        %% correlation of features
         met1 = 'RI';
         met2 = 'move';
         figure
@@ -269,15 +272,17 @@ switch type
         plot(xa,ya,'k-','linewidth',2)
         annotation('textbox',[.7 .1 .3 .1],'String',['R^2 = ' num2str(mod.Rsquared.Ordinary)],'FitBoxToText','on');
         xlim(xa);
+    %% input = data.ab or data.tr
     case 'corrall'
         %% correlation of features
-        ab = data.ab;
-        tr = data.tr;
-        abSub = max(ab.sub);
-        trSub = max(tr.sub);
-        nLd = max(ab.ld);
-        nPos = max(ab.pos);
-        nDOF = max(ab.dof);
+%         ab = data.ab;
+%         tr = data.tr;
+%         abSub = max(ab.sub);
+%         trSub = max(tr.sub);
+%         nLd = max(ab.ld);
+%         nPos = max(ab.pos);
+%         nDOF = max(ab.dof);
+%         nSub = abSub;
         
         met1 = 'RI';
         met2 = 'move';
@@ -503,15 +508,18 @@ switch type
                     for ld = 1:nLd
                         for pos = 1:nPos
                             for dof = 1:nDOF
-                                ind = data.tr == train & data.pos == pos & data.ld == ld;% & data.sub == sub;% & data.dof == dof;
+                                ind = data.tr == train & data.pos == pos & data.ld == ld & data.dof == dof;% & data.sub == sub;% & data.dof == dof;
                                 if met1_i == 1
                                     met1_ind = nanmean(data.acc(ind));
-                                    xmax = 100;
+%                                     met1_ind = nanmean(data.SI_te(ind)./(data.RI(ind)));
+%                                     met1_ind = nanmean(data.acc(ind & data.dof == 1));
+                                    xmax = 10;
                                     xmin = 0;
                                 elseif met1_i == 4
                                     met1_ind = nanmean(data.acc(ind & data.dof == 1));
                                     xmax = 100;
                                 elseif met1_i == 2
+                                    %met1_ind = nanmean(data.MSA_te(ind));
                                     met1_ind = nanmean(data.RI(ind));
                                     xmax = 0;
                                     xmin = -12;
@@ -526,10 +534,11 @@ switch type
                                 met2_ind = nanmean(data.(met2)(ind));
                                 met1_all = [met1_all; met1_ind];
                                 met2_all = [met2_all; met2_ind];
-                                datamod = [datamod; train,pos,ld,met1_ind,met2_ind];
+                                datamod = [datamod; train,pos,ld,dof,met1_ind,met2_ind];
                             end
                         end
                     end
+                    assignin('base','datamod',datamod)
                     if met1_i == 2
                         met1_all = -met1_all;
                     end
@@ -547,19 +556,19 @@ switch type
                     end
                     %                 xlim([0 100])
                 end
-                datamod = array2table(datamod,'variablenames',{'train','pos','ld','met1','met2'});
+                datamod = array2table(datamod,'variablenames',{'train','pos','ld','dof','met1','met2'});
                 if met1_i == 2
                     datamod.met1 = -datamod.met1;
                 end
                 mod = fitlme(datamod,'met2 ~ met1');
-                [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1)
+                [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete')
                 ci(met1_i,1) = RL(1,2);
                 ci(met1_i,2) = R(1,2);
                 ci(met1_i,3) = RU(1,2);
                 disp(mod.Coefficients(2,2))
                 disp(mod.Rsquared.Adjusted)
                 disp('----')
-                xlim([xmin xmax])
+                %xlim([xmin xmax])
                 xa = xlim;
                 ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
                 plot(xa,ya,'k-','linewidth',1.5)
@@ -591,6 +600,7 @@ switch type
             else
                 xlabel('|R| Confidence Intervals')
             end
+            xlim([0 1])
             ylim([.5 3.5])
             
         end

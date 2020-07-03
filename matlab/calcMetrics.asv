@@ -138,9 +138,8 @@ for i = 1:size(post.txt.time,1)
     end
 end
 
-% add nan entries for unused DOFs
 add = 6 - size(post.moveDOF,2);
-new_mat = NaN(size(post.moveDOF,1),add);                                
+new_mat = NaN(size(post.moveDOF,1),add);                                % add nan entries for unused DOFs
 post.moveDOF = [post.moveDOF new_mat];
 %% AVERAGE/COMPILE RESULTS
 for i = 0:numPos - 1
