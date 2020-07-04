@@ -142,6 +142,7 @@ end
 add = 6 - size(post.moveDOF,2);
 new_mat = NaN(size(post.moveDOF,1),add);                                
 post.moveDOF = [post.moveDOF new_mat];
+post.totDOF = [post.totDOF new_mat];
 
 %% AVERAGE/COMPILE RESULTS
 for i = 0:numPos - 1

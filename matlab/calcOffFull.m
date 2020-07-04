@@ -31,7 +31,9 @@ for subInd = 1:size(subAll.subs,1)
     train_params = w;
     
     sub = subAll.subs{subInd};
-    path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+    %path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+    path = ['C:\Users\yteh\Documents\git\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
         

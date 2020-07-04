@@ -40,6 +40,7 @@ for subInd = 1:size(subAll.subs,1)
         testOrder = subAll.testOrder(subInd,:);
         
         path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+        path = ['limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
         names = ls(path);                   % extract list of file names in converted MAT file (if it exists)
         names(1:2,:) = [];
         names(names(:,2) == 'R',:) = [];    % remove training data
@@ -67,13 +68,9 @@ for subInd = 1:size(subAll.subs,1)
             data_all_new(start:start+numTrials - 1,:) = temp_all;
             
             temp_all = [subInd.*o_all, data.results.load.*o_all, data.results.train.*o_all, data.post.pos + 1, data.post.dof,...
-                data.post.moveDOF];
+                data.post.moveDOF,data.post.totDOF,data.post.move,data.post.in];
             data_dof_new(start:start+numTrials - 1,:) = temp_all;
             
-            o_dof = ones(numDOF+1,1);
-            for cl = 2:numDOF+1
-                temp_all = [subInd.*o_dof, data.results.load*o_dof, data.results.train*o_dof, data.post.pos + 1, cl,
-            end
             start = start+numTrials;
         end
     end

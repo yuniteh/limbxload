@@ -32,7 +32,8 @@ for subInd = 1:size(subAll.subs,1)
     train_params = w;
     
     sub = subAll.subs{subInd};
-    path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+    %path = ['Z:\Lab Member Folders\Yuni Teh\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
+    path = ['C:\Users\yteh\Documents\git\projects\limbxload\matlab\completed\' subType '\' sub '\DATA\MAT'];
     if exist(fullfile(path,'train_data.mat'),'file')
         load(fullfile(path,'train_data.mat'))
         
@@ -105,7 +106,7 @@ for subInd = 1:size(subAll.subs,1)
                 class_out = reshape(class_out,1,[]);
                 cm = confusionmat(class_true,class_out);
                 
-                % ACCURACY FOR FEEDFORWARD DATA
+            % ACCURACY FOR FEEDFORWARD DATA
             else
                 for tr_type = tr_start:numTr               % 1 = static, 2 = dynamic
                     if tr_type == 1 && te_type == 3

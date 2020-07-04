@@ -493,6 +493,7 @@ switch type
         [ax]= tight_subplot(4,4,[.03 .02],[.1 .05],[.1 0.03]);
         hold all
         c = linspecer(10);
+        
         for met2_i = 1:4
             met2 = metNames{met2_i+6+1};
             ci = nan(3,3);
@@ -500,7 +501,7 @@ switch type
                 axes(ax(met1_i + (met2_i-1)*4))
                 hold all
                 datamod = [];
-                for train = 1
+                for train = 1:2
                     met1_all = [];
                     met2_all = [];
                     for ld = 1:nLd
@@ -533,12 +534,12 @@ switch type
                                 met1_all = [met1_all; met1_ind];
                                 met2_all = [met2_all; met2_ind];
                                 datamod = [datamod; train,pos,ld,dof,met1_ind,met2_ind];
-                                plot(met1_ind,met2_ind,'.','Markersize',18,'color',c(dof,:))
+                                plot(met1_ind,met2_ind,'.','Markersize',18,'color',c(met1_i,:))
                             end
                         end
                     end
                     
-                    %plot(met1_all,met2_all,'.','Markersize',18,'color',c(met1_i,:))
+                    plot(met1_all,met2_all,'.','Markersize',18,'color',c(met1_i,:))
                     if met1_i == 1
                         ylabel(met2_label{met2_i})
                     else
@@ -553,6 +554,9 @@ switch type
                     %                 xlim([0 100])
                 end
                 datamod = array2table(datamod,'variablenames',{'train','pos','ld','dof','met1','met2'});
+                if met1_i == 2
+                    datamod.met1 = -datamod.met1;
+                end
                 mod = fitlme(datamod,'met2 ~ met1');
                 [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete')
                 ci(met1_i,1) = RL(1,2);

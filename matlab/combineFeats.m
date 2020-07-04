@@ -2,12 +2,12 @@
 function out = combineFeats(mets,data_all)
 %%
 data_new = data_all(:,[1 3 4 2 5 6 7 14 10]);
-% data_new(:,5) = data_new(:,5) + 1;
+data_new(:,5) = data_new(:,5) - 1;
 data_new(:,[6 8 9]) = data_new(:,[6 8 9])*100;
 all_new = mets;
 
 %%
-maxall = size(all_new,2)-4;
+maxall = size(all_new,2);
 for sub = 1:max(all_new(:,1))
     for train = 1:max(all_new(:,2))
         for pos = 1:max(all_new(:,3))
