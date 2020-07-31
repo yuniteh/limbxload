@@ -89,11 +89,12 @@ for i = 1:size(post.txt.time,1)
     end
     prop = prop(tf == 0 & af == 1 & cout ~= 0);                                                                 % proportional output when arm is in the right position but not in target, not resting
     bool = sum(trial_dir(tf == 0 & af == 1 & cout ~= 0,:) == targ_diff(tf == 0 & af == 1 & cout ~= 0,:),2);     % >0 if in the right direction, ==0 if not
-    true_dir = bool > 0;                                                                                        % indices of movements in the target direction
+    true_dir = bool > 0;                                                                                        % indices of movements in the target direction    
     post.move_eff(i,1) = sum(prop(true_dir))./sum(prop);                                                        % movement efficacy
-    cout_temp = cout(tf == 0 & af == 1);                                                                        % classifier outputs when not in target but in arm position
+    cout_temp = cout(tf == 0 & af == 1 & cout ~= 0);                                                            % classifier outputs when not in target but in arm position
     for j = 1:numDOF
-        post.moveDOF(i,j) = sum(cout_temp(bool == 0) == j);                                                     % total #samples moving in the wrong direction
+%         dof_ind = ~true_dir & cout_temp == j;
+        post.moveDOF(i,j) = sum(cout_temp(~true_dir) == j);                                                     % total #samples moving in the wrong direction
         post.totDOF(i,j) = sum(cout_temp == j);                                                                 % total #samples of current class out
     end
 end

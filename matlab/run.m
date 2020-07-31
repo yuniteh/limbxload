@@ -2,7 +2,7 @@ clear
 close
 clc
 %%
-subType = 'TR';
+subType = 'AB';
 new = 1;
 
 %% run if there are new subs
