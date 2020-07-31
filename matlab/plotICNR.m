@@ -487,18 +487,18 @@ switch type
         end
         %% nice plots with correlation coeff and CIs, averaged across dofs & subs
     case 'corrmet3'
-        met2_label = {'Completion\newlineRate (%)','Completion\newlineTime (s)','Movement\newlineEfficacy (%)','Stopping\newlineEfficacy (%)'};
-        met1_label = {'Offline Accuracy (%)', 'Repeatability Index', 'Separability Index'};
+        met2_label = {'CR (%)','CT (s)','ME (%)','SE (%)'};
+        met1_label = {'OA (%)', 'RI', 'SI'};
         marks = {'o','.'};
         figure
-        [ax]= tight_subplot(4,3,[.03 .02],[.1 .05],[.1 0.03]);
+        [ax]= tight_subplot(4,4,[.03 .02],[.1 .05],[.1 0.03]);
         hold all
         c = linspecer(10);
         for met2_i = 1:4
             met2 = metNames{met2_i+6};
             ci = nan(3,3);
             for met1_i = 1:3
-                axes(ax(met1_i + (met2_i-1)*3))
+                axes(ax(met1_i + (met2_i-1)*4))
                 hold all
                 datamod = [];
                 for train = 1:2
@@ -556,7 +556,7 @@ switch type
                         ylim([0 100])
                     end
                     plot(datamod(datamod(:,1) == train,4),datamod(datamod(:,1) == train,5),marks{train},'Markersize'...
-                        ,6+(train-1)*16,'color',c(met1_i,:))%-(train-1).*[.2,.2,.2])
+                        ,6+(train-1)*16,'color',c(met1_i,:),'linewidth',1)%-(train-1).*[.2,.2,.2])
                 end
                 if met1_i == 3
                     assignin('base','datamod',datamod)
@@ -574,7 +574,7 @@ switch type
                 %xlim([xmin xmax])
                 xa = xlim;
                 ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
-                plot(xa,ya,'k-','linewidth',1.5)
+                plot(xa,ya,'k-','linewidth',1)
                 annotation('textbox',[.7 .1 .3 .1],'String',['R = ' num2str(R(1,2),'%.2f')],'FitBoxToText','on','linestyle','none');
                 xlim(xa);
                 if met2_i == 4
@@ -583,28 +583,28 @@ switch type
                     set(gca,'xticklabel','')
                 end
             end
-%             axes(ax(4+(met2_i-1)*4))
-%             hold all
-%             yv = [3 2 1];
-%             assignin('base','ci',ci)
-%             for p = 1:3
-%                 minci = min(ci(p,:));
-%                 rectangle('position',[minci,yv(p)-.3,abs(ci(p,1)-ci(p,3)),0.6],'linewidth',1,'facecolor',c(p,:),'curvature',.2)
-%                 plot([ci(p,2) ci(p,2)],[yv(p)-.3 yv(p)+.3],'k','linewidth',1)
-%             end
-%             set(gca,'yticklabel',[])
-%             if met2_i ~= 4
-%                 set(gca,'xticklabel',[])
-%             else
-%                 xlabel('R Confidence Intervals')
-%             end
-%             xlim([-1 1])
-%             ylim([.5 3.5])
+            axes(ax(4+(met2_i-1)*4))
+            hold all
+            yv = [3 2 1];
+            assignin('base','ci',ci)
+            for p = 1:3
+                minci = min(ci(p,:));
+                rectangle('position',[minci,yv(p)-.3,abs(ci(p,1)-ci(p,3)),0.6],'linewidth',1,'facecolor',c(p,:),'curvature',.2)
+                plot([ci(p,2) ci(p,2)],[yv(p)-.3 yv(p)+.3],'k','linewidth',1)
+            end
+            set(gca,'yticklabel',[])
+            if met2_i ~= 4
+                set(gca,'xticklabel',[])
+            else
+                xlabel('R Confidence Intervals')
+            end
+            xlim([-1 1])
+            ylim([.5 3.5])
             
         end
     case 'corrdof'
-        met2_label = {'Completion\newlineRate (%)','Completion\newlineTime (s)','Movement\newlineEfficacy (%)','Stopping\newlineEfficacy (%)'};
-        met1_label = {'Offline Accuracy (%)', 'Repeatability', 'Separability'};
+        met2_label = {'CR (%)','CT (s)','ME (%)','SE (%)'};
+        met1_label = {'OA (%)', 'RI', 'SI'};
         figure
         [ax]= tight_subplot(4,4,[.03 .02],[.1 .05],[.1 0.03]);
         hold all
