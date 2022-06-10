@@ -1,4 +1,4 @@
-function plotMEC(data,type)
+function plotICNR(data,type)
 %% set colormaps
 cblue = linspecer(5,'blue');
 cblue = flipud(cblue);
@@ -285,58 +285,68 @@ switch type
         %         nSub = abSub;
         
         met1 = 'RI';
-        met2 = 'move';
-        figure
-        hold all
-        met1_all = [];
-        met2_all = [];
-        c = linspecer(nSub);
-        datamod = [];
-        for train = 1:2
-            %             datamod = [];
-            submean = zeros(nSub,1);
-            for sub = 1:nSub
-                met1_all = [];
-                met2_all = [];
-                %                 subplot(1,nSub,sub)
-                for ld = 1:nLd
-                    for pos = 1:nPos
-                        %                         for dof = 1:nDOF
-                        ind = data.tr == train & data.pos == pos & data.ld == ld & data.sub == sub;% & data.dof == dof;
-                        if strcmp(met1,'RI')
-                            met1_ind = nanmean(data.(met1)(ind & data.dof == 1));
-                        elseif strcmp(met1,'RI/SI')
-                            met1_ind = nanmean(data.RI(ind)./data.SI_te(ind));
-                        else
-                            met1_ind = nanmean(data.(met1)(ind));
-                        end
-                        met2_ind = nanmean(data.(met2)(ind));
-                        met1_all = [met1_all; met1_ind];
-                        met2_all = [met2_all; met2_ind];
-                        %                         end
-                        datamod = [datamod; sub,train,pos,ld,met1_ind,met2_ind];
+        metNames = {'comp','time','move','stop'};
+        for met2_i = 1:4
+            met2 = metNames{met2_i};
+            figure
+            hold all
+            met1_all = [];
+            met2_all = [];
+            c = linspecer(nSub);
+            datamod = [];
+            for train = 1:2
+                %             datamod = [];
+                submean = zeros(nSub,1);
+                for sub = 1:nSub
+                    met1_all = [];
+                    met2_all = [];
+                    %                 subplot(1,nSub,sub)
+                    pos = 1;
+                    ld = 1;
+                    %for ld = 1:nLd
+                    %for pos = 1:nPos
+                    %                         for dof = 1:nDOF
+                    ind = data.tr == train & data.sub == sub;% & data.pos == pos & data.ld == ld;% & data.dof == dof;
+                    if strcmp(met1,'RI')
+                        met1_ind = nanmean(data.(met1)(ind & data.pos == 1 & data.ld == 1));
+                    elseif strcmp(met1,'RI/SI')
+                        met1_ind = nanmean(data.RI(ind)./data.SI_te(ind));
+                    else
+                        met1_ind = nanmean(data.(met1)(ind));
                     end
+                    met2_ind = nanmean(data.(met2)(ind));
+                    met1_all = [met1_all; met1_ind];
+                    met2_all = [met2_all; met2_ind];
+                    %                         end
+                    datamod = [datamod; sub,train,pos,ld,met1_ind,met2_ind];
+                    %end
+                    %end
+                    submean(sub) = nanmean(met2_all);
+                    if sub < 15
+                        subtype = 1;
+                    else
+                        subtype = 2;
+                    end
+                    plot(met1_all,met2_all,'.','Markersize',18,'color',c(subtype,:))
+                    ylabel(met2)
+                    xlabel(met1)
+                    %                 ylim([0 100])
                 end
-                submean(sub) = nanmean(met2_all);
-                plot(met1_all,met2_all,'.','Markersize',18,'color',c(sub,:))
-                ylabel(met2)
-                xlabel(met1)
-                %                 ylim([0 100])
             end
+            datamod = array2table(datamod,'variablenames',{'sub','train','pos','ld','met1','met2'});
+            datamod.sub = nominal(datamod.sub);
+            mod = fitlme(datamod,'met2 ~ met1+(1|sub)');%,'dummyvarcoding','effects')
+            [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete')
+            disp(train)
+            disp(mod.Coefficients(2,2))
+            disp(mod.Rsquared.Adjusted)
+            disp('----')
+            xa = xlim;
+            ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
+            plot(xa,ya,'k-','linewidth',2)
+            annotation('textbox',[.7 .1 .3 .1],'String',['R = ' num2str(R(1,2))],'FitBoxToText','on');
+            xlim(xa);
         end
-        datamod = array2table(datamod,'variablenames',{'sub','train','pos','ld','met1','met2'});
-        datamod.sub = nominal(datamod.sub);
-        mod = fitlme(datamod,'met2 ~ met1+(1|sub)');%,'dummyvarcoding','effects')
-        [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete')
-        disp(train)
-        disp(mod.Coefficients(2,2))
-        disp(mod.Rsquared.Adjusted)
-        disp('----')
-        xa = xlim;
-        ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
-        plot(xa,ya,'k-','linewidth',2)
-        annotation('textbox',[.7 .1 .3 .1],'String',['R^2 = ' num2str(mod.Rsquared.Ordinary)],'FitBoxToText','on');
-        xlim(xa);
     case 'corrmean'
         %% correlation of features
         met1 = 'acc';
@@ -523,7 +533,7 @@ switch type
                                     xmax = 0;
                                     xmin = -12;
                                 elseif met1_i == 3
-                                    met1(sub) = nanmean(data.SI_te(ind));
+                                    met1(sub) = nanmean(data.SI_te(ind));%./(data.RI(ind).*data.MSA_te(ind)));
                                     xmin = 0;
                                     xmax = 14;
                                 else
@@ -558,18 +568,15 @@ switch type
                     plot(datamod(datamod(:,1) == train,4),datamod(datamod(:,1) == train,5),marks{train},'Markersize'...
                         ,6+(train-1)*16,'color',c(met1_i,:),'linewidth',1)%-(train-1).*[.2,.2,.2])
                 end
-                if met1_i == 3
-                    assignin('base','datamod',datamod)
-                end
                 
                 datamod = array2table(datamod,'variablenames',{'train','pos','ld','met1','met2'});
                 mod = fitlme(datamod,'met2 ~ met1');
-                [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete')
+                [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete');
                 ci(met1_i,1) = RL(1,2);
                 ci(met1_i,2) = R(1,2);
                 ci(met1_i,3) = RU(1,2);
-                disp(mod.Coefficients(2,2))
-                disp(mod.Rsquared.Adjusted)
+                disp([met2_label{met2_i} ', ' met1_label{met1_i} ' = [' num2str(RL(1,2)) ', ' ...
+                    num2str(R(1,2)) ', ' num2str(RU(1,2)) ']'])
                 disp('----')
                 %xlim([xmin xmax])
                 xa = xlim;
@@ -602,7 +609,90 @@ switch type
             ylim([.5 3.5])
             
         end
+    case 'corrmet5'
+        met2_label = {'CR (%)','CT (s)','ME (%)','SE (%)'};
+        met1_label = {'OA (%)', 'RI', 'SI', 'MSA', 'DS'};
+        marks = {'o','.'};
+        met1_names = {'acc','RI','SI_te','MSA_tr','DS'};
+        data.DS = data.SI_te./(data.RI.*data.MSA_tr);
+        data.RI = -data.RI;
+        figure
+        [ax]= tight_subplot(4,5,[.03 .02],[.1 .05],[.1 0.03]);
+        hold all
+        c = linspecer(15);
+        for met2_i = 1:4
+            met2 = metNames{met2_i+6};
+            ci = nan(3,3);
+            for met1_i = 1:5
+                axes(ax(met1_i + (met2_i-1)*5))
+                hold all
+                datamod = [];
+                for train = 1:2
+                    met1_all = [];
+                    met2_all = [];
+                    for ld = 1:nLd
+                        for pos = 1:nPos
+                            met1 = nan(nSub,1);
+                            met2_sub = met1;
+                            for sub = 1:nSub
+                                ind = data.tr == train & data.pos == pos & data.ld == ld & data.sub == sub;
+                                met1(sub) = nanmean(data.(met1_names{met1_i})(ind));
+                                if met2_i == 2
+                                    met2_sub(sub) = 20 - nanmean(data.(met2)(ind));
+                                else
+                                    met2_sub(sub) = nanmean(data.(met2)(ind));
+                                end
+                                met1_all = [met1_all; met1(sub)];
+                                met2_all = [met2_all; met2_sub(sub)];
+                                datamod = [datamod; train,pos,ld,sub,met1(sub),met2_sub(sub)];
+                            end
+%                             met1_all = [met1_all; met1];
+%                             met2_all = [met2_all; met2_sub];
+%                             datamod = [datamod; train,pos,ld,nanmean(met1),nanmean(met2_sub)];
+                            %datamod = [datamod; train,pos,ld,met1_ind,met2_ind];
+                            %                                 plot(met1_ind,met2_ind,'.','Markersize',18,'color',c(dof,:))
+                        end
+                    end
+                    %plot(met1_all,met2_all,'.','Markersize',18,'color',c(train,:))
+                    if met1_i == 1
+                        ylabel(met2_label{met2_i})
+                    else
+                        set(gca,'yticklabel','')
+                    end
+                    
+                    if strcmp(met2,'time')
+                        ylim([0 20])
+                    else
+                        ylim([0 100])
+                    end
+                    plot(datamod(datamod(:,1) == train,end-1),datamod(datamod(:,1) == train,end),marks{train},'Markersize'...
+                        ,6+(train-1)*16,'color',c(met1_i,:),'linewidth',1)%-(train-1).*[.2,.2,.2])
+                end
+                
+                datamod = array2table(datamod,'variablenames',{'train','pos','ld','sub','met1','met2'});
+                mod = fitlme(datamod,'met2 ~ met1');
+                [R,p,RL,RU] = corrcoef(datamod.met2,datamod.met1,'rows','complete');
+                ci(met1_i,1) = RL(1,2);
+                ci(met1_i,2) = R(1,2);
+                ci(met1_i,3) = RU(1,2);
+                disp([met2_label{met2_i} ', ' met1_label{met1_i} ' = [' num2str(RL(1,2)) ', ' ...
+                    num2str(R(1,2)) ', ' num2str(RU(1,2)) ']'])
+                disp('----')
+                %xlim([xmin xmax])
+                xa = xlim;
+                ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
+                plot(xa,ya,'k-','linewidth',1)
+                annotation('textbox',[.7 .1 .3 .1],'String',['R = ' num2str(R(1,2),'%.2f')],'FitBoxToText','on','linestyle','none');
+                xlim(xa);
+                if met2_i == 4
+                    xlabel(met1_label{met1_i})
+                else
+                    set(gca,'xticklabel','')
+                end
+            end            
+        end
     case 'corrdof'
+        data.time = 20 - data.time;
         met2_label = {'CR (%)','CT (s)','ME (%)','SE (%)'};
         met1_label = {'OA (%)', 'RI', 'SI'};
         figure
@@ -669,7 +759,7 @@ switch type
                         ylim([0 100])
                     end
                 end
-                plot(datamod(:,end-1),datamod(:,end),'.','Markersize',18)
+                plot(datamod(:,end-1),datamod(:,end),'.','Markersize',18,'color',c(met1_i,:))
                 
                 datamod = array2table(datamod,'variablenames',{'train','pos','ld','dof','met1','met2'});
                 mod = fitlme(datamod,'met2 ~ met1');
@@ -677,8 +767,8 @@ switch type
                 ci(met1_i,1) = RL(1,2);
                 ci(met1_i,2) = R(1,2);
                 ci(met1_i,3) = RU(1,2);
-                disp(ci)
-                disp('----')
+                disp([met2_label{met2_i} ', ' met1_label{met1_i} ' = [' num2str(RL(1,2)) ', ' ...
+                    num2str(R(1,2)) ', ' num2str(RU(1,2)) ']'])
                 xlim([xmin xmax])
                 xa = xlim;
                 ya = mod.Coefficients(2,2).Estimate.*xa+mod.Coefficients(1,2).Estimate;
@@ -697,9 +787,9 @@ switch type
             hold all
             yv = [3 2 1];
             for p = 1:3
-                minci = min(abs(ci(p,:)));
+                minci = min(ci(p,:));
                 rectangle('position',[minci,yv(p)-.3,abs(ci(p,1)-ci(p,3)),0.6],'linewidth',1,'facecolor',c(p,:),'curvature',.2)
-                plot([abs(ci(p,2)) abs(ci(p,2))],[yv(p)-.3 yv(p)+.3],'k','linewidth',1)
+                plot([ci(p,2) ci(p,2)],[yv(p)-.3 yv(p)+.3],'k','linewidth',1)
             end
             set(gca,'yticklabel',[])
             if met2_i ~= 4
@@ -707,7 +797,7 @@ switch type
             else
                 xlabel('|R| Confidence Intervals')
             end
-            xlim([0 1])
+            xlim([-1 1])
             ylim([.5 3.5])
             
         end
